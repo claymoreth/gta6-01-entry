@@ -29,6 +29,10 @@ Controls: WASD / arrow keys to move, SHIFT to sprint, mouse to orbit the
 camera (click to lock), click the minimap to set a GPS waypoint, ESC / P to pause.
 Near a parked car, press E to get in: W/S is gas and brake (S from a stop
 reverses), A/D steers, SPACE is the handbrake, SHIFT boosts, E gets out again.
+Stealing a civilian traffic car, ramming one, or hitting a pedestrian with
+your car is a crime — if a police officer or a witness sees it, your wanted
+level rises and the police respond. Break line of sight and hide (safehouses
+and alleys help) to let the heat decay.
 
 ## Phase 1 — 3D Vertical Slice
 
@@ -75,7 +79,43 @@ reverses), A/D steers, SPACE is the handbrake, SHIFT boosts, E gets out again.
 - Synthesized sound (Web Audio, no files): engine pitch follows speed,
   tyre skid on handbrake, crash thuds on impact.
 
-Later phases add police and wanted levels, combat, missions, and audio.
+## Phase 4 — NPCs, Police and Wanted System
+
+- Pedestrians: 14 original low-poly walkers on sidewalk routes across all
+  three districts, with procedural walk animation, varied clothing, build
+  and speed. They wait for passing cars, step around obstacles and vehicles,
+  flee danger (crashes, reckless driving), get knocked down when hit by a
+  car, then get up and run. All walkers share five instanced meshes (one
+  draw call per body part), so 17 walkers cost only 7 draw calls.
+- Police: 3 foot officers on patrol routes plus 2 Police Interceptors
+  (black-and-white, red/blue flashing light bar, siren) driving the road
+  network. Officers patrol, investigate incidents, pursue on foot and by
+  car (road-following pursuit with intercept targeting at high wanted
+  levels), search the last known position when they lose sight, and return
+  to patrol when the heat clears. No teleporting, no seeing through walls.
+- Crime detection (only reliably detectable acts): stealing a civilian
+  traffic car, ramming a civilian or police car, hitting a pedestrian with
+  your car. Detection needs a witness — a police unit within 45 m or a
+  pedestrian within 25 m with a clear line of sight (buildings block
+  sight). A civilian witness reports after a short delay; with no witness
+  the crime goes unnoticed. One event raises wanted at most once.
+- Wanted 0–5 stars: heat 0–100, thresholds 1/21/41/61/86. Each level
+  activates more units (1 at level 1 … all 5 at level 5), with faster
+  foot pursuit, higher police-car throttle and boost, and intercept
+  targeting from level 4. The HUD shows live stars plus PURSUIT / SEARCH /
+  HIDDEN status, and the minimap shows pedestrians (pale) and police (blue).
+- Escape and hiding: heat decays only while no police unit sees you —
+  1.5/s in the open, 3.0/s inside a hiding zone (the two safehouses and two
+  alleys). Lose sight for 2 s and the police switch to SEARCH at your last
+  known position; stay hidden and the level falls step by step to 0.
+- Audio and feedback: a synthesized two-tone siren while a pursuit or
+  search is active (silent on patrol), a dispatch blip on wanted changes,
+  and priority notifications (crime reported, wanted up/down, pursuit,
+  lost sight, escaped, cleared) that queue instead of overwriting each other.
+- Weapons and attacks are NOT in this phase — firing a weapon or attacking
+  civilians is Phase 5.
+
+Later phases add combat, missions, and audio.
 
 ## Tech
 

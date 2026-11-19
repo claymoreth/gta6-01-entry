@@ -30,6 +30,12 @@ const TYPES = {
     wheelbase: 3.9, wheelR: 0.45, topSpeed: 22, accel: 7, brake: 18,
     maxSteer: 0.45, reverseTop: 8,
   },
+  // Police interceptor (Phase 4): black body, white doors, roof light bar.
+  police: {
+    name: 'Police Interceptor', color: 0x14161c, len: 4.5, wid: 1.95, h: 1.3,
+    wheelbase: 2.7, wheelR: 0.34, topSpeed: 32, accel: 13, brake: 26,
+    maxSteer: 0.55, reverseTop: 10,
+  },
   // Traffic cars reuse the sedan body with muted civic colours.
   traffic: {
     name: 'Civic Car', color: 0x8a8f9a, len: 4.3, wid: 1.85, h: 1.3,
@@ -153,6 +159,32 @@ function buildCarMesh(type, color) {
     group.add(mirror);
   }
 
+  // Phase 4: police livery — white doors + a red/blue roof light bar.
+  // The bar's materials are returned so the police AI can flash them
+  // (no per-car light: a real light per police car would bloat shaders
+  // the same way per-car spotlights did in Phase 3).
+  let lightBar = null;
+  if (type === 'police') {
+    const whiteMat = new THREE.MeshLambertMaterial({ color: 0xe8e8e8 });
+    for (const s of [-1, 1]) {
+      const door = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 0.06), whiteMat);
+      door.position.set(-0.1, 0.62, s * (halfW + 0.01));
+      group.add(door);
+    }
+    const redMat = new THREE.MeshBasicMaterial({ color: 0x551111 });
+    const blueMat = new THREE.MeshBasicMaterial({ color: 0x111155 });
+    const barBase = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 1.1), darkMat);
+    barBase.position.set(-0.1, 1.42, 0);
+    group.add(barBase);
+    const red = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.45), redMat);
+    red.position.set(-0.1, 1.52, 0.28);
+    group.add(red);
+    const blue = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.45), blueMat);
+    blue.position.set(-0.1, 1.52, -0.28);
+    group.add(blue);
+    lightBar = { redMat, blueMat };
+  }
+
   // Wheels: steer groups (front) -> spin groups -> tyre + hub.
   const wheels = {};
   const wheelZ = halfW - 0.08;
@@ -188,7 +220,7 @@ function buildCarMesh(type, color) {
   // createVehicles) is attached to the driven car only. Ten spotlights in
   // the scene would bloat every shader program with light uniforms — the
   // headless SwiftShader validator failed such programs flakily at load.
-  return { group, wheels };
+  return { group, wheels, lightBar };
 }
 
 // Push a car's two axle circles out of the world colliders.
@@ -221,10 +253,14 @@ class Vehicle {
     this.type = TYPES[typeName];
     this.drivable = !!(opts && opts.drivable);
     this.traffic = !!(opts && opts.traffic);
+    // Phase 4: police cars + stolen traffic cars (theft).
+    this.police = !!(opts && opts.police);
+    this.stolen = false; // a traffic car the player has taken (theft)
     const color = (opts && opts.color) ?? this.type.color;
     const built = buildCarMesh(typeName, color);
     this.group = built.group;
     this.wheels = built.wheels;
+    this.lightBar = built.lightBar || null;
     this.pos = new THREE.Vector3(x, 0, z);
     this.heading = heading;
     this.speed = 0;
@@ -261,11 +297,16 @@ class Vehicle {
     this.speed = 0;
     this.steer = 0;
     this.damage = 0;
+    this.stolen = false;
     this.wpIndex = 0;
     this.stuckTimer = 0;
     this.recoverTimer = 0;
     this.group.position.copy(this.pos);
     this.group.rotation.y = this.heading;
+    if (this.lightBar) {
+      this.lightBar.redMat.color.setHex(0x551111);
+      this.lightBar.blueMat.color.setHex(0x111155);
+    }
     for (const s of this.smoke) {
       s.spr.visible = false;
       s.spr.material.opacity = 0;
@@ -276,6 +317,11 @@ class Vehicle {
   // control: { throttle (-1..1), steer (-1..1), handbrake, boost }
   // Returns crash intensity (0 = no crash this frame).
   update(dt, control, colliders) {
+    // Held in place by a test hook: brake to a stop and stay.
+    if (this.holdTimer > 0) {
+      this.holdTimer -= dt;
+      control = { throttle: -1, steer: 0, handbrake: false, boost: false };
+    }
     const t = this.type;
     const speedRatio = clamp(Math.abs(this.speed) / t.topSpeed, 0, 1);
     const maxSteer = t.maxSteer * (1 - speedRatio * 0.55);
@@ -382,7 +428,9 @@ class Vehicle {
 
   // Traffic AI: pure pursuit along a road loop + obstacle braking.
   // others: all vehicles (for the obstacle check). playerOnFoot: {x, z} or null.
-  trafficControl(dt, others, playerOnFoot) {
+  // pedestrians: [{x, z}] of nearby walkers — traffic brakes for them too
+  // (Phase 4: civilians on crosswalks must not be run over casually).
+  trafficControl(dt, others, playerOnFoot, pedestrians) {
     const wp = this.route[this.wpIndex];
     const dx = wp.x - this.pos.x;
     const dz = wp.z - this.pos.z;
@@ -437,13 +485,28 @@ class Vehicle {
         if (dot > 0.8) blocked = true;
       }
     }
+    // Pedestrians ahead on the road: brake, same as for the player.
+    if (!blocked && pedestrians) {
+      for (const p of pedestrians) {
+        const ox = p.x - this.pos.x;
+        const oz = p.z - this.pos.z;
+        const d = Math.hypot(ox, oz);
+        if (d > 8 || d < 0.01) continue;
+        const dot = (ox * fx + oz * fz) / d;
+        if (dot > 0.8) {
+          blocked = true;
+          break;
+        }
+      }
+    }
     const throttle = blocked ? -1 : this.speed < this.targetSpeed ? 0.65 : 0;
     return { throttle, steer, handbrake: false, boost: false };
   }
 }
 
 // ---- road loops for traffic (right-hand lanes) ----
-const LOOPS = {
+// Exported so the Phase 4 police patrols can reuse the same loops.
+export const LOOPS = {
   // East-west spine: eastbound z=+2.5, westbound z=-2.5.
   ew: [
     { x: -160, z: 2.5 }, { x: 160, z: 2.5 }, { x: 166, z: 0 },
@@ -502,6 +565,28 @@ export function createVehicles(scene, world) {
   }
 
   const all = [...drivables, ...traffic];
+
+  // Phase 4: two police interceptors. They are in `all` (so separation +
+  // player collision treat them as solid cars) but NOT in `traffic` — the
+  // police AI in npcs.js drives them (patrol / pursuit / search).
+  const police = [];
+  const policeSpecs = [
+    // Unit 1: east-west spine, eastbound lane, facing east.
+    { loop: 'ew', at: 0, x: 10, z: 2.5, heading: Math.PI / 2 },
+    // Unit 2: Jalan Dermaga northbound lane, facing north.
+    { loop: 'dermaga', at: 0, x: 118, z: 40, heading: Math.PI },
+  ];
+  for (const spec of policeSpecs) {
+    const loop = LOOPS[spec.loop];
+    const car = new Vehicle(scene, 'police', spec.x, spec.z, spec.heading, {
+      police: true,
+      route: loop,
+      wpIndex: 1,
+      targetSpeed: 9,
+    });
+    police.push(car);
+    all.push(car);
+  }
   let driven = null;
 
   // One shared headlight beam, attached to the driven car only (see
@@ -543,9 +628,12 @@ export function createVehicles(scene, world) {
   }
 
   // Pairwise separation so cars never overlap each other. Returns the
-  // hardest impact (for damage + crash sound) involving the driven car.
+  // hardest impact (for damage + crash sound) involving the driven car,
+  // plus a list of civilian/police cars the driven car damaged (Phase 4
+  // vehicle-damage crime reporting — main.js rate-limits the reports).
   function separate() {
     let worst = 0;
+    const trafficDamage = [];
     for (let i = 0; i < all.length; i++) {
       for (let j = i + 1; j < all.length; j++) {
         const a = all[i];
@@ -567,14 +655,20 @@ export function createVehicles(scene, world) {
         if (closing > 4 && (a === driven || b === driven)) {
           const hit = Math.min(closing, 14);
           worst = Math.max(worst, hit);
-          a.damage = Math.min(1, a.damage + (hit - 4) * 0.015);
-          b.damage = Math.min(1, b.damage + (hit - 4) * 0.015);
+          const dmg = (hit - 4) * 0.015;
+          a.damage = Math.min(1, a.damage + dmg);
+          b.damage = Math.min(1, b.damage + dmg);
           a.speed *= 0.6;
           b.speed *= 0.6;
+          // The driven car damaging a civilian or police car is a crime.
+          const victim = a === driven ? b : a;
+          if (victim.traffic || victim.police) {
+            trafficDamage.push({ car: victim, amount: dmg });
+          }
         }
       }
     }
-    return worst;
+    return { worst, trafficDamage };
   }
 
   function setDriven(v) {
@@ -599,29 +693,59 @@ export function createVehicles(scene, world) {
 
   // control: { throttle, steer, handbrake, boost } for the driven car, or
   // null when the player is on foot. playerOnFoot: {x, z} or null (driving).
-  // Returns { crashes: [intensities] } for sound effects.
-  function update(dt, control, playerOnFoot) {
+  // pedestrians: [{x, z}] — traffic brakes for them (Phase 4).
+  // Returns { crashes: [intensities], trafficDamage: [{car, amount}] }.
+  function update(dt, control, playerOnFoot, pedestrians) {
     const crashes = [];
     if (driven && control) {
       const c = driven.update(dt, control, colliders);
       if (c > 0) crashes.push(c);
     }
     for (const car of traffic) {
-      const ctrl = car.trafficControl(dt, all, playerOnFoot);
+      // A stolen traffic car is driven by the player (updated above as
+      // `driven`); never update it twice as traffic.
+      if (car === driven) continue;
+      const ctrl = car.trafficControl(dt, all, playerOnFoot, pedestrians);
       const c = car.update(dt, ctrl, colliders);
       if (c > 0 && car === driven) crashes.push(c);
     }
     const sep = separate();
-    if (sep > 0) crashes.push(sep);
-    return { crashes };
+    if (sep.worst > 0) crashes.push(sep.worst);
+    return { crashes, trafficDamage: sep.trafficDamage };
+  }
+
+  // Phase 4: drive one police car with a control computed by the police AI
+  // (patrol / pursuit / search). Returns the crash intensity, if any.
+  function updatePolice(car, dt, control) {
+    return car.update(dt, control, colliders);
+  }
+
+  // Phase 4: nearest car the player can enter — a parked drivable, or a
+  // civilian traffic car (entering one is theft). Police cars are locked.
+  function nearestEnterable(x, z, maxDist) {
+    let best = null;
+    let bestD = maxDist;
+    for (const v of [...drivables, ...traffic]) {
+      const d = Math.hypot(v.pos.x - x, v.pos.z - z);
+      if (d < bestD) {
+        bestD = d;
+        best = v;
+      }
+    }
+    if (!best) return null;
+    return { vehicle: best, dist: bestD, theft: !!best.traffic && !best.stolen };
   }
 
   return {
     drivables,
     traffic,
+    police,
     all,
+    LOOPS,
     get driven() { return driven; },
     nearestDrivable,
+    nearestEnterable,
+    updatePolice,
     resolvePlayer,
     setDriven,
     reset,

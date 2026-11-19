@@ -1,0 +1,33 @@
+PASS  HTTP server serves game/ — (node:3939) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/hatch/workspace/makefun/gta6-01-entry/serve.ts is not specified and it doesn't parse as CommonJS.
+PASS  Start screen visible on load
+PASS  Start Game button starts play
+PASS  Downtown district detected — EMBER BAY — DOWNTOWN
+PASS  Residential district detected — RESIDENTIAL — Housing
+PASS  Waterfront district detected — WATERFRONT — Ember Pier
+PASS  Melati Park district detected — RESIDENTIAL — Melati Park
+PASS  Ember Pier district detected — WATERFRONT — Ember Pier
+PASS  Player walks west across into Residential — pos (-61.1, 0.0) — RESIDENTIAL — Housing
+PASS  Player walks east across into Waterfront — pos (61.2, 0.0) — WATERFRONT — Ember Pier
+PASS  GPS waypoint set by minimap click — waypoint (98.3, -20.8) "Destination (minimap)"
+PASS  GPS distance readout is positive — 42.4 m
+PASS  GPS distance shrinks as the player approaches — 27.7 m -> 22.3 m
+PASS  Waypoint arrival clears the custom waypoint — now "Melati Park" custom=false
+PASS  Mission waypoint resumes after custom arrival — "Melati Park"
+PASS  Mission objective advances on arrival — index 0 -> 1
+PASS  Minimap shows the player position — pixel rgba(255,209,102,255)
+PASS  HUD shows district + street — RESIDENTIAL — Melati Park / Park Road
+PASS  HUD shows mission + progress — CITY OF EMBERS — Go to Ember Lighthouse (1/3 objectives)
+PASS  HUD shows health + armour numbers — health 100, armour 50
+PASS  HUD shows money + weapon + ammo + wanted — $0 / Bare Hands / — / WANTED ☆☆☆☆☆
+PASS  GPS readout visible while a waypoint is active — gps element shown
+INFO  draw calls=285 triangles=6554
+PASS  No page errors — 0 errors
+PASS  No console errors — 0 errors
+PASS  No failed requests — 0 failed
+PASS  District shot session auto-starts — state=playing
+PASS  District shot has a waypoint on the lighthouse — waypoint (168.0, 0.0) "Ember Lighthouse"
+INFO  wall FPS @1280x720 full quality (headless SwiftShader) = 1.4; HUD meter = 1.4; draw calls=651 triangles=14984
+PASS  No page errors in visual session — 0 errors
+PASS  Screenshot 03-districts-gps.jpg <= 256 KiB — 51.6 KiB
+
+==== PHASE 2 TESTS: 29/29 passed ====

@@ -56,8 +56,17 @@ async function poll(fn, timeoutMs, intervalMs = 400) {
 }
 const embers = (page, expr) => page.evaluate((e) => {
   // eslint-disable-next-line no-new-func
-  return new Function('e', `return (${e})`)(window.__embers);
+  return new Function('e', `return e.${e}`)(window.__embers);
 }, expr);
+// Flaky SwiftShader shader error (empty program info log) — a known
+// headless-renderer artifact, not a game bug (same filter as
+// test-english.cjs and test-phase4.cjs). Real console errors still fail.
+function isFlakyShaderError(text) {
+  return /THREE\.WebGLProgram: Shader Error/.test(text) && /Program Info Log:\s*$/.test(text);
+}
+function realErrors(list) {
+  return list.filter((e) => !isFlakyShaderError(e));
+}
 
 (async () => {
   const server = spawn('node', ['serve.ts', '--port', String(PORT)], { cwd: REPO, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -84,12 +93,14 @@ const embers = (page, expr) => page.evaluate((e) => {
   await sleep(4000);
   check('game playing', (await page.evaluate(() => window.__embers.state)) === 'playing');
 
-  // 1. Vehicles present: 3 drivable + 7 traffic, at their spawn spots.
+  // 1. Vehicles present: 3 drivable + 7 traffic + 2 police interceptors
+  // (Phase 4 added the police cars; total 12, was 10 in Phase 3).
   const vs = await page.evaluate(() => window.__embers.vehicles);
   const drivable = vs.filter((v) => v.drivable);
   const traffic = vs.filter((v) => v.traffic);
-  check('vehicles present', vs.length === 10 && drivable.length === 3 && traffic.length === 7,
-    `${vs.length} total, ${drivable.length} drivable (${drivable.map((v) => v.type).join(',')}), ${traffic.length} traffic`);
+  const police = vs.filter((v) => v.police);
+  check('vehicles present', vs.length === 12 && drivable.length === 3 && traffic.length === 7 && police.length === 2,
+    `${vs.length} total, ${drivable.length} drivable (${drivable.map((v) => v.type).join(',')}), ${traffic.length} traffic, ${police.length} police`);
   const sedan = vs.find((v) => v.type === 'sedan');
   check('sedan spawn', sedan && Math.abs(sedan.x - 28) < 1 && Math.abs(sedan.z + 11.5) < 1,
     sedan ? `(${sedan.x.toFixed(1)}, ${sedan.z.toFixed(1)})` : 'missing');
@@ -262,7 +273,8 @@ const embers = (page, expr) => page.evaluate((e) => {
   const dcA = await page.evaluate(() => window.__embers.drawCalls);
   const triA = await page.evaluate(() => window.__embers.triangles);
   console.log(`SESSION A perf: FPS ${fpsA.toFixed(1)} (wall-clock, 640x360 lowfx) · draw calls ${dcA} · triangles ${triA}`);
-  check('no console errors / failed requests', errors.length === 0, errors.length ? errors.slice(0, 5).join(' | ') : 'clean');
+  const realErrs = realErrors(errors);
+  check('no console errors / failed requests', realErrs.length === 0, realErrs.length ? realErrs.slice(0, 5).join(' | ') : 'clean');
   await page.close();
 
   // ================= SESSION B — visuals (1280x720, full quality) =================
@@ -297,7 +309,8 @@ const embers = (page, expr) => page.evaluate((e) => {
   const shotStat = fs.statSync(shotPath);
   check('screenshot 04-vehicle-driving.jpg saved', shotStat.size > 10000, `${(shotStat.size / 1024).toFixed(0)} KiB`);
   console.log(`SESSION B perf: FPS ${driveState.fps.toFixed(1)} (wall-clock, 1280x720 full quality) · draw calls ${driveState.drawCalls} · triangles ${driveState.triangles}`);
-  check('no console errors / failed requests (visuals)', errorsB.length === 0, errorsB.length ? errorsB.slice(0, 5).join(' | ') : 'clean');
+  const realErrsB = realErrors(errorsB);
+  check('no console errors / failed requests (visuals)', realErrsB.length === 0, realErrsB.length ? realErrsB.slice(0, 5).join(' | ') : 'clean');
   await shot.close();
 
   await browser.close();

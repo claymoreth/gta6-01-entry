@@ -13,6 +13,10 @@ export function createAudio() {
   let engineGain = null;
   let noiseBuf = null;
   let skidGain = null;
+  // Phase 4: police siren (wailing two-tone) + dispatch blip.
+  let sirenOsc = null;
+  let sirenLfo = null;
+  let sirenGain = null;
 
   function init() {
     if (ctx) {
@@ -66,6 +70,26 @@ export function createAudio() {
       bp.connect(skidGain);
       skidGain.connect(ctx.destination);
       skidSrc.start();
+
+      // Phase 4 siren: triangle oscillator wailing between ~700 and
+      // ~1150 Hz (a slow sine LFO on its frequency), gain 0 until a
+      // pursuit is active. Only created once; setSiren() fades it in/out.
+      sirenOsc = ctx.createOscillator();
+      sirenOsc.type = 'triangle';
+      sirenOsc.frequency.value = 900;
+      sirenLfo = ctx.createOscillator();
+      sirenLfo.type = 'sine';
+      sirenLfo.frequency.value = 0.45; // one wail cycle ~2.2 s
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.value = 240;
+      sirenLfo.connect(lfoGain);
+      lfoGain.connect(sirenOsc.frequency);
+      sirenGain = ctx.createGain();
+      sirenGain.gain.value = 0;
+      sirenOsc.connect(sirenGain);
+      sirenGain.connect(ctx.destination);
+      sirenOsc.start();
+      sirenLfo.start();
     } catch {
       ctx = null; // audio unavailable: the game still works, silently.
     }
@@ -84,6 +108,32 @@ export function createAudio() {
   function setSkid(on) {
     if (!ctx || !skidGain) return;
     skidGain.gain.setTargetAtTime(on ? 0.045 : 0, ctx.currentTime, 0.08);
+  }
+
+  // Phase 4: siren on only while a pursuit/search is active (never a
+  // constant drone on patrol). level 0..1 scales the volume slightly.
+  function setSiren(on, level) {
+    if (!ctx || !sirenGain) return;
+    const v = on ? 0.018 + Math.min(1, level || 0) * 0.014 : 0;
+    sirenGain.gain.setTargetAtTime(v, ctx.currentTime, 0.25);
+  }
+
+  // Phase 4: short two-tone dispatch blip for wanted-level changes.
+  function blip() {
+    if (!ctx) return;
+    try {
+      const o = ctx.createOscillator();
+      o.type = 'square';
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.05, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.frequency.setValueAtTime(880, ctx.currentTime);
+      o.frequency.setValueAtTime(660, ctx.currentTime + 0.14);
+      o.start();
+      o.stop(ctx.currentTime + 0.3);
+    } catch { /* ignore audio errors */ }
   }
 
   // intensity: impact speed in m/s (4..~20).
@@ -107,5 +157,5 @@ export function createAudio() {
     } catch { /* ignore audio errors */ }
   }
 
-  return { init, setEngine, setSkid, crash };
+  return { init, setEngine, setSkid, crash, setSiren, blip };
 }

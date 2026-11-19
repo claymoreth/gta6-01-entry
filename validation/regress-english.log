@@ -1,0 +1,26 @@
+PASS  server up — http://127.0.0.1:8916/
+PASS  start screen English tagline — CITY OF | EMBERS
+PASS  start screen controls English — controls block ok
+PASS  start screen: no Indonesian words — clean
+PASS  welcome toast English — "Welcome to Ember Bay"
+PASS  HUD English (district/street/mission/weapon/hint) — district-name=EMBER BAY — DOWNTOWN | street-name=Merdeka Street | mission=CITY OF EMBERS — Go to Melati Park | mission-progress=0/3 objectives | weapon=Bare Hands | hint=WASD / ←↑↓→ move · SHIFT run · E enter car · Mouse rotate camera · ESC pause | gps-name=Melati Park
+PASS  Residential: Melati Park / Park Road — RESIDENTIAL — Melati Park · Park Road
+PASS  Waterfront: Ember Pier / Merdeka Street — WATERFRONT — Ember Pier · Merdeka Street
+PASS  Waterfront pier end: Wooden Pier — WATERFRONT — Ember Pier · Wooden Pier
+PASS  Downtown: Merdeka Junction — EMBER BAY — DOWNTOWN · Merdeka Junction
+PASS  Downtown EW spine: Beach Road — EMBER BAY — DOWNTOWN · Beach Road
+PASS  mission waypoint name English — "Ember Lighthouse"
+PASS  enter prompt English — {"hidden":false,"text":"Press E to enter — Ember Sedan"}
+PASS  driving HUD English (EMBER SEDAN + KM/H) — EMBER SEDAN 7 KM/H (peak 5 km/h)
+PASS  exit vehicle works, toast English — driving=false, toasts seen: ["DOWNTOWN — Twin Towers","Ember Sedan — W/S gas & brake · A/D steer · SPACE handbrake · E exit"]
+PASS  pause screen English — PAUSED |  | Ember Bay awaits you. |  | RESUME RESTART
+PASS  visible DOM: no Indonesian words — clean
+SESSION A perf: FPS 3.2 (wall-clock, 640x360 lowfx)
+PASS  no console errors / failed requests (logic) — clean
+SHOT drive state: {"driving":true,"speedKmh":32.73820962666793,"speedo":"33","speedoName":"EMBER SEDAN","speedoUnit":"KM/H","mission":"CITY OF EMBERS — Go to Melati Park","district":"EMBER BAY — DOWNTOWN","street":"Beach Road","fps":1.25,"drawCalls":976,"triangles":21038}
+PASS  shot=drive: English driving HUD — EMBER SEDAN 33 KM/H · CITY OF EMBERS — Go to Melati Park · EMBER BAY — DOWNTOWN · Beach Road
+PASS  screenshot validation/05-english-ui.jpg saved — 77 KiB
+SESSION B perf: FPS 1.3 (wall-clock, 1280x720 full quality) · draw calls 976 · triangles 21038
+PASS  no console errors / failed requests (visuals) — clean
+
+==== ENGLISH CHECK: 21/21 PASS ====

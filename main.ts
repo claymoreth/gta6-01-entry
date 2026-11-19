@@ -41,5 +41,6 @@ writeFileSync(
 
 // City of Embers hands in Ember Bay at night: a third-person 3D open world
 // of three districts (Downtown, Residential, Waterfront) with drivable cars,
-// civilian traffic, a GPS waypoint system and a 3-stop exploration mission.
+// civilian traffic, a GPS waypoint system and a 3-stop exploration mission,
+// plus Phase 4 pedestrians, police patrol/pursuit and a 0-5 wanted system.
 console.log(`CITY OF EMBERS handed in: game/ + screenshots/ -> ${out}`);
