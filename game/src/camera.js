@@ -1,34 +1,24 @@
-// CITY OF EMBERS — third-person camera (original, Phase 1).
-// Orbits behind the player with the mouse, smooth-follows, clamps pitch,
-// and shortens itself out of buildings via a segment test.
-
 import * as THREE from 'three';
 import { segmentClearT, clamp } from './collision.js';
-
 const DIST = 6.0;
-const HEIGHT_OFFSET = 1.7; // target = player head height
-const PITCH_MIN = -0.12; // looking slightly up from below
-const PITCH_MAX = 0.55; // looking down from above
+const HEIGHT_OFFSET = 1.7;
+const PITCH_MIN = -0.12;
+const PITCH_MAX = 0.55;
 const SENS = 0.0032;
-
 export function createCamera(camera, colliders) {
   const state = {
-    yaw: 0, // camera sits south of the player, looking north (-z) at spawn
+    yaw: 0,
     pitch: 0.22,
     distance: DIST,
-    // Driving mode pulls the camera further back and higher (set by main.js).
     dist: DIST,
     height: HEIGHT_OFFSET,
     target: new THREE.Vector3(),
     desired: new THREE.Vector3(),
   };
-
-  // Consume mouse deltas (pixels) into orbit angles.
   state.orbit = function orbit(dx, dy) {
     state.yaw -= dx * SENS;
     state.pitch = clamp(state.pitch + dy * SENS, PITCH_MIN, PITCH_MAX);
   };
-
   state.reset = function reset() {
     state.yaw = 0;
     state.pitch = 0.22;
@@ -36,18 +26,13 @@ export function createCamera(camera, colliders) {
     state.dist = DIST;
     state.height = HEIGHT_OFFSET;
   };
-
-  // Phase 3: driving camera sits further back and higher than on foot.
   state.setDistance = function setDistance(d) {
     state.dist = d;
   };
   state.setHeight = function setHeight(h) {
     state.height = h;
   };
-
-  // Follow the player; dt-smoothed. Returns nothing; moves the camera.
   state.update = function update(dt, playerPos) {
-    // Smooth target: lerp the look target toward the player's head.
     state.target.lerp(
       new THREE.Vector3(playerPos.x, playerPos.y + state.height, playerPos.z),
       Math.min(1, 14 * dt),
@@ -62,7 +47,6 @@ export function createCamera(camera, colliders) {
       state.target.y + oy * state.dist,
       state.target.z + oz * state.dist,
     );
-    // Keep the camera above the ground and out of buildings.
     if (state.desired.y < 0.5) state.desired.y = 0.5;
     const t = segmentClearT(
       state.target.x, state.target.y, state.target.z,
@@ -77,6 +61,5 @@ export function createCamera(camera, colliders) {
     );
     camera.lookAt(state.target);
   };
-
   return state;
 }

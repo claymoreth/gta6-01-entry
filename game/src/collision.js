@@ -1,15 +1,6 @@
-// CITY OF EMBERS — collision helpers (original, Phase 1).
-// Axis-aligned boxes only. The player is a circle in XZ; the camera uses a
-// segment test. Everything here is pure math, no Three.js dependency.
-
-// A collider is { minX, maxX, minZ, maxZ, minY, maxY, name }.
 export function makeCollider(minX, minZ, maxX, maxZ, minY, maxY, name) {
   return { minX, maxX, minZ, maxZ, minY: minY ?? 0, maxY: maxY ?? 100, name: name ?? 'solid' };
 }
-
-// Push a circle (x, z, radius) out of every AABB it overlaps, but only for
-// boxes tall enough to block the given body height (feetY..feetY+height).
-// Returns the corrected { x, z } and the list of colliders touched.
 export function resolveCircle(x, z, radius, feetY, height, colliders) {
   let cx = x;
   let cz = z;
@@ -29,7 +20,6 @@ export function resolveCircle(x, z, radius, feetY, height, colliders) {
       cx += dx * push;
       cz += dz * push;
     } else {
-      // Centre is inside the box: push out along the smallest penetration axis.
       const pLeft = cx - c.minX + radius;
       const pRight = c.maxX - cx + radius;
       const pBack = cz - c.minZ + radius;
@@ -43,10 +33,6 @@ export function resolveCircle(x, z, radius, feetY, height, colliders) {
   }
   return { x: cx, z: cz, touched };
 }
-
-// Does the segment (x0,z0,y0)->(x1,z1,y1) hit any collider? Used to keep the
-// third-person camera out of buildings. Returns the largest safe t in [0,1]
-// (1 = no hit), sampled in small steps — cheap and robust for boxy cities.
 export function segmentClearT(x0, y0, z0, x1, y1, z1, colliders) {
   const STEPS = 24;
   for (let i = 1; i <= STEPS; i++) {
@@ -64,7 +50,6 @@ export function segmentClearT(x0, y0, z0, x1, y1, z1, colliders) {
   }
   return 1;
 }
-
 export function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
 }

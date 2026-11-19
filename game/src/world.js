@@ -1,16 +1,6 @@
-// CITY OF EMBERS — world builder (original, Phase 2).
-// Three connected districts in one fictional tropical coastal metropolis:
-// DOWNTOWN (centre, tall towers), RESIDENTIAL (west, houses + park),
-// WATERFRONT (east, warehouses + containers + pier + sea).
-// One east-west spine road links all three; north-south roads cross it.
-// All geometry is generated here; no external assets, no network requests.
-
 import * as THREE from 'three';
 import { makeCollider } from './collision.js';
-
-// Playable bounds: x in [-170, 170], z in [-70, 70].
 export const WORLD_BOUNDS = { minX: -170, maxX: 170, minZ: -70, maxZ: 70 };
-
 function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {
@@ -20,10 +10,6 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-
-// Procedural facade: dark concrete with a grid of windows, some lit warm.
-// The same canvas drives both the colour map and the emissive map, so lit
-// windows glow at night while dark ones stay dark.
 function facadeTexture(rand, litRatio, cols, rows) {
   const w = 128;
   const h = 256;
@@ -33,7 +19,6 @@ function facadeTexture(rand, litRatio, cols, rows) {
   const g = cv.getContext('2d');
   g.fillStyle = '#181d2e';
   g.fillRect(0, 0, w, h);
-  // faint vertical panel seams
   g.fillStyle = 'rgba(255,255,255,0.04)';
   for (let x = 0; x < w; x += 16) g.fillRect(x, 0, 1, h);
   const cw = w / cols;
@@ -59,8 +44,6 @@ function facadeTexture(rand, litRatio, cols, rows) {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
-
-// Warm residential facade: softer wall, more windows lit, warmer palette.
 function houseTexture(rand, litRatio) {
   const w = 128;
   const h = 128;
@@ -92,8 +75,6 @@ function houseTexture(rand, litRatio) {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
-
-// Corrugated warehouse wall: vertical rust-orange ribs.
 function warehouseTexture(rand, base, rib) {
   const w = 128;
   const h = 128;
@@ -109,7 +90,6 @@ function warehouseTexture(rand, base, rib) {
     g.fillStyle = 'rgba(0,0,0,0.25)';
     g.fillRect(x + 5, 0, 2, h);
   }
-  // a few small lit windows near the top
   for (let i = 0; i < 6; i++) {
     if (rand() < 0.7) {
       g.fillStyle = '#ffb347';
@@ -120,8 +100,6 @@ function warehouseTexture(rand, base, rib) {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
-
-// Wooden planks for the pier.
 function plankTexture() {
   const w = 128;
   const h = 128;
@@ -144,8 +122,6 @@ function plankTexture() {
   tex.repeat.set(6, 1);
   return tex;
 }
-
-// Dark sea with faint wave streaks.
 function seaTexture() {
   const w = 256;
   const h = 256;
@@ -173,7 +149,6 @@ function seaTexture() {
   tex.repeat.set(3, 3);
   return tex;
 }
-
 function buildPalm(rand) {
   const palm = new THREE.Group();
   const height = 5 + rand() * 2.5;
@@ -191,7 +166,7 @@ function buildPalm(rand) {
     const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 2.4), leafMat);
     leaf.position.set(Math.cos(angle) * 0.9, crownY - 0.15, Math.sin(angle) * 0.9);
     leaf.rotation.y = -angle + Math.PI / 2;
-    leaf.rotation.x = 0.55 + rand() * 0.25; // droop
+    leaf.rotation.x = 0.55 + rand() * 0.25;
     leaf.translateZ(0.4);
     leaf.castShadow = true;
     palm.add(leaf);
@@ -204,8 +179,6 @@ function buildPalm(rand) {
   }
   return palm;
 }
-
-// Round-canopy tree for the residential park and streets.
 function buildTree(rand) {
   const tree = new THREE.Group();
   const height = 2.2 + rand() * 1.2;
@@ -224,18 +197,14 @@ function buildTree(rand) {
   tree.add(canopy);
   return tree;
 }
-
 export function buildWorld(scene, opts) {
   const lowFx = !!(opts && opts.lowFx);
   const rand = mulberry32(20261119);
   const colliders = [];
-  const lamps = []; // real point lights, updated subtly for flicker life
-  const pois = []; // points of interest for the minimap + GPS missions
-
-  // ---- sky, fog, lights ----
+  const lamps = [];
+  const pois = [];
   scene.background = new THREE.Color(0x0a0a1e);
   scene.fog = new THREE.FogExp2(0x0d0d26, 0.0075);
-
   const hemi = new THREE.HemisphereLight(0x4a4a8a, 0x0c0a14, 0.55);
   scene.add(hemi);
   const ambient = new THREE.AmbientLight(0x2a2a55, 0.5);
@@ -251,8 +220,6 @@ export function buildWorld(scene, opts) {
   moon.shadow.camera.far = 220;
   moon.shadow.bias = -0.0005;
   scene.add(moon);
-
-  // Stars + moon disc
   {
     const starGeo = new THREE.BufferGeometry();
     const N = 500;
@@ -276,43 +243,33 @@ export function buildWorld(scene, opts) {
     moonDisc.lookAt(0, 0, 0);
     scene.add(moonDisc);
   }
-
-  // ---- ground, roads, sidewalks ----
-  // Ground covers the whole city strip plus the sea bed under the water.
   const asphalt = new THREE.MeshLambertMaterial({ color: 0x17171f });
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 180), asphalt);
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
-
   const roadMat = new THREE.MeshLambertMaterial({ color: 0x232330 });
   const roadWideMat = new THREE.MeshLambertMaterial({ color: 0x262633 });
-  // East-west spine: Jalan Merdeka, x -170..170, width 10.
   const roadEW = new THREE.Mesh(new THREE.PlaneGeometry(344, 10), roadMat);
   roadEW.rotation.x = -Math.PI / 2;
   roadEW.position.y = 0.02;
   roadEW.receiveShadow = true;
   scene.add(roadEW);
-  // North-south downtown: Jalan Pantai, x=0, z -70..70.
   const roadNS0 = new THREE.Mesh(new THREE.PlaneGeometry(10, 144), roadMat);
   roadNS0.rotation.x = -Math.PI / 2;
   roadNS0.position.y = 0.02;
   roadNS0.receiveShadow = true;
   scene.add(roadNS0);
-  // North-south residential: Jalan Melati, x=-115, z -60..60, width 8.
   const roadNSW = new THREE.Mesh(new THREE.PlaneGeometry(8, 124), roadMat);
   roadNSW.rotation.x = -Math.PI / 2;
   roadNSW.position.set(-115, 0.02, 0);
   roadNSW.receiveShadow = true;
   scene.add(roadNSW);
-  // North-south waterfront: Jalan Dermaga, x=115, z -60..60, width 12 (trucks).
   const roadNSE = new THREE.Mesh(new THREE.PlaneGeometry(12, 124), roadWideMat);
   roadNSE.rotation.x = -Math.PI / 2;
   roadNSE.position.set(115, 0.02, 0);
   roadNSE.receiveShadow = true;
   scene.add(roadNSE);
-
-  // Sidewalks: raised strips along every road.
   const walkMat = new THREE.MeshLambertMaterial({ color: 0x3b3b4c });
   function sidewalk(w, d, x, z) {
     const s = new THREE.Mesh(new THREE.BoxGeometry(w, 0.18, d), walkMat);
@@ -320,20 +277,14 @@ export function buildWorld(scene, opts) {
     s.receiveShadow = true;
     scene.add(s);
   }
-  // EW spine sidewalks (both sides, full length).
   sidewalk(344, 3, 0, -6.5);
   sidewalk(344, 3, 0, 6.5);
-  // Downtown NS sidewalks.
   sidewalk(3, 144, -6.5, 0);
   sidewalk(3, 144, 6.5, 0);
-  // Residential NS sidewalks.
   sidewalk(3, 124, -120.5, 0);
   sidewalk(3, 124, -109.5, 0);
-  // Waterfront NS sidewalks (wider road, sidewalks further out).
   sidewalk(3, 124, 107.5, 0);
   sidewalk(3, 124, 122.5, 0);
-
-  // Lane dashes (centre lines) + crosswalk stripes at the 3 intersections.
   const dashMat = new THREE.MeshBasicMaterial({ color: 0xd8c95a });
   const stripeMat = new THREE.MeshBasicMaterial({ color: 0xdfe3ee });
   for (let x = -168; x <= 168; x += 6) {
@@ -373,9 +324,6 @@ export function buildWorld(scene, opts) {
   crosswalk(0, 0);
   crosswalk(-115, 0);
   crosswalk(115, 0);
-
-  // ---- DOWNTOWN towers (Phase 1 block, unchanged) ----
-  // x, z, width, depth, height — 16 towers in four quadrants.
   const specs = [
     [18, -20, 14, 12, 26], [38, -18, 12, 14, 38], [20, -42, 16, 12, 14], [42, -44, 14, 14, 22],
     [-20, -22, 12, 16, 32], [-40, -20, 14, 12, 18], [-22, -44, 14, 12, 46], [-44, -44, 12, 14, 26],
@@ -421,8 +369,6 @@ export function buildWorld(scene, opts) {
   }
   pois.push({ name: 'Merdeka Plaza', x: 0, z: 0, kind: 'landmark', color: '#ffd166' });
   pois.push({ name: 'Ember Tower', x: -22, z: -44, kind: 'landmark', color: '#ffd166' });
-
-  // ---- downtown alleys: 2 narrow gaps with dumpsters + a dim light ----
   const dumpMat = new THREE.MeshLambertMaterial({ color: 0x1e4d2a });
   function dumpster(x, z, ry) {
     const d = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.3, 1.1), dumpMat);
@@ -435,8 +381,6 @@ export function buildWorld(scene, opts) {
   dumpster(30, -26, 0.3);
   dumpster(-30, 30, -0.2);
   pois.push({ name: 'Narrow Alley', x: 30, z: -26, kind: 'alley', color: '#8a8fa8' });
-
-  // ---- palms along the downtown sidewalks (Phase 1, unchanged) ----
   const palmSpots = [];
   for (let x = -52; x <= 52; x += 13) {
     if (Math.abs(x) < 10) continue;
@@ -453,8 +397,6 @@ export function buildWorld(scene, opts) {
     scene.add(palm);
     colliders.push(makeCollider(x - 0.35, z - 0.35, x + 0.35, z + 0.35, 0, 6, 'palm'));
   }
-
-  // ---- streetlights (downtown: 6 real lights at the intersection) ----
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x22222e });
   const lampMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
   const lightSpots = [[-9, -9], [9, -9], [-9, 9], [9, 9], [-9, 0], [9, 0]];
@@ -492,10 +434,6 @@ export function buildWorld(scene, opts) {
   }
   for (const [x, z] of lightSpots) lampPost(x, z, true);
   for (const [x, z] of lampSpots) lampPost(x, z, false);
-
-  // ================= RESIDENTIAL (west, x -170..-60) =================
-  // Low houses with warm windows + pyramid roofs, a park, round trees,
-  // a community hall, and one marked safehouse. Quieter, warmer light.
   const houseTex = houseTexture(mulberry32(77), 0.7);
   const houseTex2 = houseTexture(mulberry32(78), 0.55);
   const roofRed = new THREE.MeshLambertMaterial({ color: 0x7a2e22 });
@@ -509,7 +447,6 @@ export function buildWorld(scene, opts) {
     b.castShadow = true;
     b.receiveShadow = true;
     scene.add(b);
-    // pyramid roof (4-sided cone)
     const r = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, 2.2, 4), roof);
     r.position.set(x, h + 1.1, z);
     r.rotation.y = Math.PI / 4;
@@ -517,19 +454,17 @@ export function buildWorld(scene, opts) {
     scene.add(r);
     colliders.push(makeCollider(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 0, h + 2.2, 'house'));
   }
-  // House grid (columns x, rows z). Park occupies x -152..-128, z 22..52.
   const houseCols = [-155, -138, -95, -78];
   const houseRows = [-50, -30, -10, 12, 32, 52];
   for (const hx of houseCols) {
     for (const hz of houseRows) {
-      if (hx >= -152 && hx <= -128 && hz >= 22 && hz <= 52) continue; // park
+      if (hx >= -152 && hx <= -128 && hz >= 22 && hz <= 52) continue;
       const w = 7 + rand() * 2;
       const d = 7 + rand() * 2;
       const h = 6 + rand() * 3;
       house(hx, hz, w, d, h, rand() < 0.5 ? houseTex : houseTex2, rand() < 0.5 ? roofRed : roofBrown);
     }
   }
-  // Two mid-rise apartment blocks at the south edge (transition to downtown).
   function apartment(x, z, w, d, h) {
     const tex = facades[Math.floor(rand() * facades.length)];
     const mat = new THREE.MeshLambertMaterial({
@@ -547,8 +482,6 @@ export function buildWorld(scene, opts) {
   }
   apartment(-150, 60, 14, 10, 15);
   apartment(-85, 60, 12, 10, 12);
-
-  // Taman Melati park: lawn, round trees, benches, a small fountain.
   {
     const lawn = new THREE.Mesh(
       new THREE.PlaneGeometry(24, 30),
@@ -567,7 +500,6 @@ export function buildWorld(scene, opts) {
       scene.add(bench);
       colliders.push(makeCollider(bx - 1.1, bz - 0.4, bx + 1.1, bz + 0.4, 0, 0.6, 'bench'));
     }
-    // fountain: stone basin + glowing water disc
     const basin = new THREE.Mesh(
       new THREE.CylinderGeometry(2.2, 2.4, 0.7, 12),
       new THREE.MeshLambertMaterial({ color: 0x5a5a6a }),
@@ -583,7 +515,6 @@ export function buildWorld(scene, opts) {
     water.position.set(-140, 0.72, 37);
     scene.add(water);
     colliders.push(makeCollider(-142.4, 34.6, -137.6, 39.4, 0, 0.8, 'fountain'));
-    // round trees in and around the park
     const parkTrees = [[-148, 24], [-132, 26], [-150, 48], [-132, 50], [-146, 36], [-134, 42], [-162, -42], [-100, -52], [-100, 52], [-168, 20]];
     for (const [tx, tz] of parkTrees) {
       const tree = buildTree(rand);
@@ -594,8 +525,6 @@ export function buildWorld(scene, opts) {
     }
     pois.push({ name: 'Melati Park', x: -140, z: 37, kind: 'park', color: '#7ef0a8' });
   }
-
-  // Balai Warga (community hall) — wider, pale walls, warm porch light.
   {
     const hallMat = new THREE.MeshLambertMaterial({ color: 0x8a7a5a });
     const hall = new THREE.Mesh(new THREE.BoxGeometry(16, 7, 10), hallMat);
@@ -618,8 +547,6 @@ export function buildWorld(scene, opts) {
     colliders.push(makeCollider(-123, -61, -107, -51, 0, 7, 'building'));
     pois.push({ name: 'Community Hall', x: -115, z: -56, kind: 'landmark', color: '#ffd166' });
   }
-
-  // Safehouse 1: the house at (-155, -10) gets a green door light.
   {
     const glow = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.9, 0.15),
@@ -633,19 +560,12 @@ export function buildWorld(scene, opts) {
     lamps.push(p);
     pois.push({ name: 'Safehouse — Green House', x: -155, z: -10, kind: 'safehouse', color: '#37d67a' });
   }
-
-  // Residential streetlights: 2 real lights (park + Melati intersection).
   for (const [x, z] of [[-140, 30], [-115, 9]]) lampPost(x, z, true);
-  // Emissive-only lamp posts along Jalan Melati.
   for (let z = -50; z <= 50; z += 12.5) {
     if (Math.abs(z) < 10) continue;
     lampPost(-120.5, z, false);
     lampPost(-109.5, z, false);
   }
-
-  // ================= WATERFRONT (east, x 60..170) =================
-  // Warehouses, container yard, gantry cranes, wooden pier, lighthouse,
-  // and the sea. Orange/red industrial lighting, wide truck roads.
   const whTex1 = warehouseTexture(mulberry32(91), '#4a3226', '#6b4a30');
   const whTex2 = warehouseTexture(mulberry32(92), '#33302e', '#4a4642');
   function warehouse(x, z, w, d, h, tex) {
@@ -657,7 +577,6 @@ export function buildWorld(scene, opts) {
     b.castShadow = true;
     b.receiveShadow = true;
     scene.add(b);
-    // orange roofline strip
     const strip = new THREE.Mesh(
       new THREE.BoxGeometry(w + 0.2, 0.35, d + 0.2),
       new THREE.MeshBasicMaterial({ color: 0xff7a2f }),
@@ -671,8 +590,6 @@ export function buildWorld(scene, opts) {
   warehouse(140, -45, 20, 14, 9, whTex2);
   warehouse(140, 45, 20, 14, 11, whTex1);
   pois.push({ name: 'Ember Warehouse', x: 85, z: -40, kind: 'industrial', color: '#ff7a2f' });
-
-  // Container yard: stacks of coloured boxes between the warehouses.
   const containerCols = [0x2f6db3, 0xb33a2f, 0x3a7a4a, 0xb38a2f, 0x5a5a8a];
   const containerSpots = [
     [100, -15, 2], [100, -8, 1], [107, -15, 1], [107, -8, 2],
@@ -693,8 +610,6 @@ export function buildWorld(scene, opts) {
     colliders.push(makeCollider(cx - 3, cz - 1.2, cx + 3, cz + 1.2, 0, stack * 2.6, 'container'));
   }
   pois.push({ name: 'Container Yard', x: 112, z: 0, kind: 'industrial', color: '#ff7a2f' });
-
-  // Gantry cranes: 4 legs + top beam + jib + hook block.
   function gantryCrane(x, z, h, ry) {
     const g = new THREE.Group();
     const steel = new THREE.MeshLambertMaterial({ color: 0x8a6a2f });
@@ -726,15 +641,12 @@ export function buildWorld(scene, opts) {
   gantryCrane(128, -28, 16, 0);
   gantryCrane(148, 28, 18, Math.PI / 2);
   pois.push({ name: 'Pier Crane', x: 128, z: -28, kind: 'landmark', color: '#ff7a2f' });
-
-  // Wooden pier from the quay into the sea (walkable, flat).
   {
     const pierMat = new THREE.MeshLambertMaterial({ map: plankTexture() });
     const pier = new THREE.Mesh(new THREE.BoxGeometry(32, 0.3, 8), pierMat);
     pier.position.set(156, 0.15, 0);
     pier.receiveShadow = true;
     scene.add(pier);
-    // support posts under the pier (visual only)
     const postMat = new THREE.MeshLambertMaterial({ color: 0x3a2a18 });
     for (let px = 142; px <= 170; px += 7) {
       for (const pz of [-3.4, 3.4]) {
@@ -743,7 +655,6 @@ export function buildWorld(scene, opts) {
         scene.add(post);
       }
     }
-    // pier edge rails (low, with gaps) — colliders keep the player on the pier
     const railMat = new THREE.MeshLambertMaterial({ color: 0x4a3220 });
     for (const pz of [-3.8, 3.8]) {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(32, 0.9, 0.15), railMat);
@@ -752,12 +663,9 @@ export function buildWorld(scene, opts) {
       colliders.push(makeCollider(140, pz - 0.1, 172, pz + 0.1, 0, 1, 'rail'));
     }
     colliders.push(makeCollider(140, -4, 172, -3.8, 0, 1, 'rail'));
-    // pier end rail (blocks walking off the end, lighthouse sits behind it)
     colliders.push(makeCollider(171.8, -4, 172.2, 4, 0, 1, 'rail'));
     pois.push({ name: 'Ember Pier', x: 156, z: 0, kind: 'landmark', color: '#4aa8ff' });
   }
-
-  // Lighthouse at the pier end: white/red tower + glowing lamp room.
   let beaconLight = null;
   {
     const white = new THREE.MeshLambertMaterial({ color: 0xe8e4da });
@@ -791,8 +699,6 @@ export function buildWorld(scene, opts) {
     colliders.push(makeCollider(166, -2, 170, 2, 0, 20, 'lighthouse'));
     pois.push({ name: 'Ember Lighthouse', x: 168, z: 0, kind: 'landmark', color: '#ffe9a8' });
   }
-
-  // The sea: a dark blue plane east of the quay (x 156..192).
   let seaMat = null;
   {
     seaMat = new THREE.MeshLambertMaterial({ map: seaTexture(), color: 0x9fc4e8, emissive: 0x0a2036, emissiveIntensity: 0.4 });
@@ -801,8 +707,6 @@ export function buildWorld(scene, opts) {
     sea.position.set(176, 0.01, 0);
     scene.add(sea);
   }
-
-  // Quay wall along x=155 (keeps the player out of the sea; pier gap at z -4..4).
   {
     const quayMat = new THREE.MeshLambertMaterial({ color: 0x3a3a44 });
     for (const [z0, z1] of [[-62, -4], [4, 62]]) {
@@ -813,8 +717,6 @@ export function buildWorld(scene, opts) {
       colliders.push(makeCollider(154.4, z0, 155.6, z1, 0, 1.1, 'quay'));
     }
   }
-
-  // Safehouse 2: a small office beside warehouse (140, 45), green door light.
   {
     const office = new THREE.Mesh(
       new THREE.BoxGeometry(7, 4.5, 5),
@@ -832,8 +734,6 @@ export function buildWorld(scene, opts) {
     colliders.push(makeCollider(128.5, 42.5, 135.5, 47.5, 0, 4.5, 'office'));
     pois.push({ name: 'Safehouse — Pier Office', x: 132, z: 45, kind: 'safehouse', color: '#37d67a' });
   }
-
-  // Waterfront streetlights: 2 real lights (dock + yard), orange.
   for (const [x, z] of [[115, 9], [148, -9]]) {
     const g = new THREE.Group();
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 7, 8), poleMat);
@@ -851,23 +751,18 @@ export function buildWorld(scene, opts) {
     lamps.push(p);
     colliders.push(makeCollider(x - 0.2, z - 0.2, x + 0.2, z + 0.2, 0, 7, 'lamp'));
   }
-  // Emissive-only lamps along Jalan Dermaga.
   for (let z = -50; z <= 50; z += 12.5) {
     if (Math.abs(z) < 10) continue;
     lampPost(107.5, z, false);
     lampPost(122.5, z, false);
   }
-  // Emissive-only lamps along the EW spine, residential + waterfront stretches.
   for (let x = -165; x <= 165; x += 12.5) {
-    if (Math.abs(x) < 55) continue; // downtown already has its own
-    if (Math.abs(x + 115) < 9 || Math.abs(x - 115) < 9) continue; // intersections
+    if (Math.abs(x) < 55) continue;
+    if (Math.abs(x + 115) < 9 || Math.abs(x - 115) < 9) continue;
     lampPost(x, -8.2, false);
     lampPost(x, 8.2, false);
   }
-
-  // ---- district / street naming for the HUD ----
   function districtAt(x, z) {
-    // Waterfront (east).
     if (x > 60) {
       if (x > 152) return { district: 'WATERFRONT — Ember Pier', street: 'Wooden Pier' };
       if (Math.abs(z) <= 9) return { district: 'WATERFRONT — Ember Pier', street: 'Merdeka Street' };
@@ -875,14 +770,12 @@ export function buildWorld(scene, opts) {
       if (z > 20) return { district: 'WATERFRONT — South Warehouse', street: 'Pier Road' };
       return { district: 'WATERFRONT — Container Yard', street: 'Pier Road' };
     }
-    // Residential (west).
     if (x < -60) {
       if (x < -125 && z >= 22 && z <= 52) return { district: 'RESIDENTIAL — Melati Park', street: 'Park Road' };
       if (Math.abs(z) <= 9) return { district: 'RESIDENTIAL — Housing', street: 'Merdeka Street' };
       if (Math.abs(x + 115) <= 9) return { district: 'RESIDENTIAL — Jasmine Street', street: 'Jasmine Street' };
       return { district: 'RESIDENTIAL — Housing', street: 'Jasmine Street' };
     }
-    // Downtown (centre, Phase 1 names kept).
     if (Math.abs(x) <= 9 && Math.abs(z) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Merdeka Junction' };
     if (Math.abs(x) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Merdeka Street' };
     if (Math.abs(z) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Beach Road' };
@@ -891,17 +784,12 @@ export function buildWorld(scene, opts) {
     if (x > 0 && z > 0) return { district: 'BEACH VILLAGE — Pier', street: 'Pier Road' };
     return { district: 'BEACH VILLAGE — Night Market', street: 'Market Road' };
   }
-
   function update(dt, t) {
-    // gentle lamp flicker so the night feels alive
     for (let i = 0; i < lamps.length; i++) {
       lamps[i].intensity = (lamps[i].color.getHex() === 0x37d67a ? 18 : 60) + Math.sin(t * 7 + i * 2.4) * 2.5;
     }
-    // lighthouse beacon pulse
     if (beaconLight) beaconLight.intensity = 40 + Math.sin(t * 1.6) * 22;
-    // slow sea shimmer
     if (seaMat) seaMat.emissiveIntensity = 0.35 + Math.sin(t * 0.5) * 0.1;
   }
-
   return { colliders, districtAt, update, pois, bounds: WORLD_BOUNDS };
 }

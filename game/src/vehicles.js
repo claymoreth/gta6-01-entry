@@ -1,19 +1,6 @@
-// CITY OF EMBERS — vehicles + driving + traffic (original, Phase 3).
-// Arcade car physics (bicycle-ish model: throttle/brake/reverse, steering
-// that tightens with speed, handbrake drift), original low-poly car models
-// built from primitives, and civilian traffic that follows road loops with
-// simple obstacle braking. No external assets, no network requests.
-//
-// Conventions (same as player.js): heading is a yaw around Y, forward =
-// (sin heading, cos heading) in (x, z). Steering right (D) DECREASES the
-// heading, so a car moving forward turns right. Speed is signed: + forward,
-// - reverse. All motion is frame-rate independent (dt, clamped by main.js).
-
 import * as THREE from 'three';
 import { resolveCircle, clamp } from './collision.js';
 import { WORLD_BOUNDS } from './world.js';
-
-// ---- vehicle types (original Ember Bay fleet) ----
 const TYPES = {
   sedan: {
     name: 'Ember Sedan', color: 0x3a6db3, len: 4.4, wid: 1.9, h: 1.35,
@@ -30,23 +17,18 @@ const TYPES = {
     wheelbase: 3.9, wheelR: 0.45, topSpeed: 22, accel: 7, brake: 18,
     maxSteer: 0.45, reverseTop: 8,
   },
-  // Police interceptor (Phase 4): black body, white doors, roof light bar.
   police: {
     name: 'Police Interceptor', color: 0x14161c, len: 4.5, wid: 1.95, h: 1.3,
     wheelbase: 2.7, wheelR: 0.34, topSpeed: 32, accel: 13, brake: 26,
     maxSteer: 0.55, reverseTop: 10,
   },
-  // Traffic cars reuse the sedan body with muted civic colours.
   traffic: {
     name: 'Civic Car', color: 0x8a8f9a, len: 4.3, wid: 1.85, h: 1.3,
     wheelbase: 2.7, wheelR: 0.33, topSpeed: 11, accel: 6, brake: 16,
     maxSteer: 0.5, reverseTop: 6,
   },
 };
-
 const TRAFFIC_COLORS = [0x8a8f9a, 0xd8d8d8, 0x2f6d6b, 0xb8a03a, 0x5a5a6e, 0x7a4a6b, 0x3a5a8a];
-
-// ---- smoke texture (one shared canvas radial gradient) ----
 let smokeTex = null;
 function getSmokeTexture() {
   if (smokeTex) return smokeTex;
@@ -63,11 +45,6 @@ function getSmokeTexture() {
   smokeTex = new THREE.CanvasTexture(cv);
   return smokeTex;
 }
-
-// ---- car mesh (original, built from primitives) ----
-// Returns { group, spinFL, spinFR, spinRL, spinRR, steerL, steerR }.
-// Wheel hierarchy: steerGroup (rotation.y = steer, front only) ->
-// spinGroup (rotation.x += speed*dt/r) -> cylinder mesh (axis along X).
 function buildCarMesh(type, color) {
   const t = TYPES[type];
   const group = new THREE.Group();
@@ -77,12 +54,9 @@ function buildCarMesh(type, color) {
   const chromeMat = new THREE.MeshLambertMaterial({ color: 0x8a8f9a });
   const tyreMat = new THREE.MeshLambertMaterial({ color: 0x141414 });
   const hubMat = new THREE.MeshLambertMaterial({ color: 0x9a9aa2 });
-
   const halfL = t.len / 2;
   const halfW = t.wid / 2;
-
   if (type === 'truck') {
-    // Cab (front, tall) + open cargo bed (rear) + chassis.
     const chassis = new THREE.Mesh(new THREE.BoxGeometry(t.len, 0.5, t.wid), darkMat);
     chassis.position.y = 0.55;
     chassis.castShadow = true;
@@ -95,7 +69,6 @@ function buildCarMesh(type, color) {
     windshield.position.set(halfL - 0.15, 1.55, 0);
     group.add(windshield);
     const bedWall = new THREE.MeshLambertMaterial({ color });
-    // cargo bed: floor + 3 walls (open at the back)
     const bedFloor = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.18, t.wid - 0.1), bedWall);
     bedFloor.position.set(-halfL + 1.9, 0.9, 0);
     bedFloor.castShadow = true;
@@ -110,13 +83,11 @@ function buildCarMesh(type, color) {
       wall.castShadow = true;
       group.add(wall);
     }
-    // a crate in the bed
     const crate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 1.1), new THREE.MeshLambertMaterial({ color: 0x6b4a2f }));
     crate.position.set(-halfL + 1.6, 1.5, 0);
     crate.castShadow = true;
     group.add(crate);
   } else {
-    // Sedan / sports / traffic: lower body + glass cabin + roof + bumpers.
     const body = new THREE.Mesh(new THREE.BoxGeometry(t.len, 0.55, t.wid), bodyMat);
     body.position.y = 0.55;
     body.castShadow = true;
@@ -129,7 +100,6 @@ function buildCarMesh(type, color) {
     roof.position.set(-t.len * 0.04, 1.32, 0);
     roof.castShadow = true;
     group.add(roof);
-    // hood + trunk ridges
     const hood = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, t.wid * 0.9), bodyMat);
     hood.position.set(halfL - 0.55, 0.86, 0);
     group.add(hood);
@@ -140,8 +110,6 @@ function buildCarMesh(type, color) {
     bumperR.position.set(-halfL + 0.05, 0.42, 0);
     group.add(bumperR);
   }
-
-  // Headlights (warm emissive, front) + taillights (red, rear).
   const headMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
   const tailMat = new THREE.MeshBasicMaterial({ color: 0xff2a2a });
   for (const s of [-1, 1]) {
@@ -152,17 +120,11 @@ function buildCarMesh(type, color) {
     tail.position.set(-halfL - 0.02, 0.72, s * (halfW - 0.45));
     group.add(tail);
   }
-  // side mirrors
   for (const s of [-1, 1]) {
     const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.08), darkMat);
     mirror.position.set(halfL * 0.45, 1.0, s * (halfW + 0.02));
     group.add(mirror);
   }
-
-  // Phase 4: police livery — white doors + a red/blue roof light bar.
-  // The bar's materials are returned so the police AI can flash them
-  // (no per-car light: a real light per police car would bloat shaders
-  // the same way per-car spotlights did in Phase 3).
   let lightBar = null;
   if (type === 'police') {
     const whiteMat = new THREE.MeshLambertMaterial({ color: 0xe8e8e8 });
@@ -184,8 +146,6 @@ function buildCarMesh(type, color) {
     group.add(blue);
     lightBar = { redMat, blueMat };
   }
-
-  // Wheels: steer groups (front) -> spin groups -> tyre + hub.
   const wheels = {};
   const wheelZ = halfW - 0.08;
   const axleF = t.wheelbase / 2;
@@ -195,7 +155,7 @@ function buildCarMesh(type, color) {
     steerG.position.set(x, t.wheelR, z);
     const spinG = new THREE.Group();
     const tyre = new THREE.Mesh(new THREE.CylinderGeometry(t.wheelR, t.wheelR, 0.24, 12), tyreMat);
-    tyre.rotation.z = Math.PI / 2; // cylinder axis along X (the axle)
+    tyre.rotation.z = Math.PI / 2;
     tyre.castShadow = true;
     spinG.add(tyre);
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(t.wheelR * 0.45, t.wheelR * 0.45, 0.26, 8), hubMat);
@@ -215,16 +175,8 @@ function buildCarMesh(type, color) {
   wheels.spinFR = fr.spinG;
   wheels.spinRL = rl.spinG;
   wheels.spinRR = rr.spinG;
-
-  // No per-car light: a single shared headlight spotlight (created in
-  // createVehicles) is attached to the driven car only. Ten spotlights in
-  // the scene would bloat every shader program with light uniforms — the
-  // headless SwiftShader validator failed such programs flakily at load.
   return { group, wheels, lightBar };
 }
-
-// Push a car's two axle circles out of the world colliders.
-// Returns the impact speed (|speed| at the moment of the push), 0 if free.
 function resolveCar(pos, heading, type, speed, colliders) {
   const fx = Math.sin(heading);
   const fz = Math.cos(heading);
@@ -245,17 +197,14 @@ function resolveCar(pos, heading, type, speed, colliders) {
   }
   return impact;
 }
-
-// ---- vehicle (physics + visuals + damage) ----
 class Vehicle {
   constructor(scene, typeName, x, z, heading, opts) {
     this.typeName = typeName;
     this.type = TYPES[typeName];
     this.drivable = !!(opts && opts.drivable);
     this.traffic = !!(opts && opts.traffic);
-    // Phase 4: police cars + stolen traffic cars (theft).
     this.police = !!(opts && opts.police);
-    this.stolen = false; // a traffic car the player has taken (theft)
+    this.stolen = false;
     const color = (opts && opts.color) ?? this.type.color;
     const built = buildCarMesh(typeName, color);
     this.group = built.group;
@@ -270,13 +219,11 @@ class Vehicle {
     this.group.position.copy(this.pos);
     this.group.rotation.y = heading;
     scene.add(this.group);
-    // traffic AI state
     this.route = (opts && opts.route) || null;
     this.wpIndex = (opts && opts.wpIndex) || 0;
     this.targetSpeed = (opts && opts.targetSpeed) || 8;
     this.stuckTimer = 0;
     this.recoverTimer = 0;
-    // damage smoke pool
     this.smoke = [];
     this.smokeTimer = 0;
     for (let i = 0; i < 8; i++) {
@@ -290,7 +237,6 @@ class Vehicle {
       this.smoke.push({ spr, life: 0, maxLife: 1 });
     }
   }
-
   reset() {
     this.pos.set(this.spawn.x, 0, this.spawn.z);
     this.heading = this.spawn.heading;
@@ -313,11 +259,7 @@ class Vehicle {
       s.life = 0;
     }
   }
-
-  // control: { throttle (-1..1), steer (-1..1), handbrake, boost }
-  // Returns crash intensity (0 = no crash this frame).
   update(dt, control, colliders) {
-    // Held in place by a test hook: brake to a stop and stay.
     if (this.holdTimer > 0) {
       this.holdTimer -= dt;
       control = { throttle: -1, steer: 0, handbrake: false, boost: false };
@@ -327,43 +269,32 @@ class Vehicle {
     const maxSteer = t.maxSteer * (1 - speedRatio * 0.55);
     const targetSteer = control.steer * maxSteer;
     this.steer += (targetSteer - this.steer) * Math.min(1, 8 * dt);
-
     const dmgFactor = 1 - this.damage * 0.5;
     const engineDead = this.damage >= 0.95;
     if (control.throttle > 0 && !engineDead) {
       this.speed += t.accel * dmgFactor * control.throttle * dt * (control.boost ? 1.35 : 1);
     } else if (control.throttle < 0) {
       if (this.speed > 0.5) {
-        // S while moving = brake, down to (but never past) a stop.
         this.speed = Math.max(0, this.speed + t.brake * control.throttle * dt);
       } else if (!engineDead) {
-        // S from (near) stop = reverse.
         this.speed += t.accel * 0.55 * control.throttle * dt;
       }
     }
     if (control.handbrake) {
-      // Handbrake: strong decel that stops at zero, never flips the sign
-      // (a flipped sign would jitter the car around a standstill).
       const hb = t.brake * 1.3 * dt;
       this.speed = Math.abs(this.speed) <= hb ? 0 : this.speed - Math.sign(this.speed) * hb;
     }
-    // drag + rolling resistance
     this.speed -= this.speed * 0.55 * dt;
     this.speed -= Math.sign(this.speed) * 0.6 * dt;
     if (Math.abs(this.speed) < 0.05 && control.throttle === 0 && !control.handbrake) this.speed = 0;
     const top = t.topSpeed * (1 - this.damage * 0.4);
     this.speed = clamp(this.speed, -t.reverseTop, top);
-
-    // yaw: bicycle model. Steering right (steer > 0) decreases heading.
     const yawRate = (this.speed / t.wheelbase) * Math.tan(this.steer) * (control.handbrake ? 1.6 : 1);
     this.heading -= yawRate * dt;
-
     const fx = Math.sin(this.heading);
     const fz = Math.cos(this.heading);
     this.pos.x += fx * this.speed * dt;
     this.pos.z += fz * this.speed * dt;
-
-    // world collision (walls, containers, lamps...) — two axle circles.
     const impact = resolveCar(this.pos, this.heading, t, this.speed, colliders);
     let crash = 0;
     if (impact > 4) {
@@ -371,11 +302,8 @@ class Vehicle {
       this.speed *= 0.35;
       crash = impact;
     }
-    // world bounds
     this.pos.x = clamp(this.pos.x, WORLD_BOUNDS.minX + 2, WORLD_BOUNDS.maxX - 2);
     this.pos.z = clamp(this.pos.z, WORLD_BOUNDS.minZ + 2, WORLD_BOUNDS.maxZ - 2);
-
-    // visuals: mesh transform, wheel spin + steer, smoke
     this.group.position.copy(this.pos);
     this.group.rotation.y = this.heading;
     const spin = (this.speed * dt) / t.wheelR;
@@ -386,12 +314,9 @@ class Vehicle {
     this.wheels.steerL.rotation.y = this.steer;
     this.wheels.steerR.rotation.y = this.steer;
     this.updateSmoke(dt);
-
     return crash;
   }
-
   updateSmoke(dt) {
-    // emit puffs from the hood while badly damaged and moving
     this.smokeTimer -= dt;
     if (this.damage > 0.5 && Math.abs(this.speed) > 0.5 && this.smokeTimer <= 0) {
       this.smokeTimer = 0.14;
@@ -425,11 +350,6 @@ class Vehicle {
       s.spr.material.opacity = 0.5 * (1 - k);
     }
   }
-
-  // Traffic AI: pure pursuit along a road loop + obstacle braking.
-  // others: all vehicles (for the obstacle check). playerOnFoot: {x, z} or null.
-  // pedestrians: [{x, z}] of nearby walkers — traffic brakes for them too
-  // (Phase 4: civilians on crosswalks must not be run over casually).
   trafficControl(dt, others, playerOnFoot, pedestrians) {
     const wp = this.route[this.wpIndex];
     const dx = wp.x - this.pos.x;
@@ -443,8 +363,6 @@ class Vehicle {
     while (dh > Math.PI) dh -= Math.PI * 2;
     while (dh < -Math.PI) dh += Math.PI * 2;
     let steer = clamp(dh * 1.6, -1, 1);
-
-    // stuck recovery: reversing briefly if jammed against something
     if (this.recoverTimer > 0) {
       this.recoverTimer -= dt;
       return { throttle: -0.5, steer: -steer, handbrake: false, boost: false };
@@ -459,8 +377,6 @@ class Vehicle {
     } else {
       this.stuckTimer = 0;
     }
-
-    // obstacle ahead? brake (throttle -1 = brake while moving).
     const fx = Math.sin(this.heading);
     const fz = Math.cos(this.heading);
     let blocked = false;
@@ -470,7 +386,7 @@ class Vehicle {
       const oz = o.pos.z - this.pos.z;
       const d = Math.hypot(ox, oz);
       if (d > 10 || d < 0.01) continue;
-      const dot = (ox * fx + oz * fz) / d; // 1 = straight ahead
+      const dot = (ox * fx + oz * fz) / d;
       if (dot > 0.86) {
         blocked = true;
         break;
@@ -485,7 +401,6 @@ class Vehicle {
         if (dot > 0.8) blocked = true;
       }
     }
-    // Pedestrians ahead on the road: brake, same as for the player.
     if (!blocked && pedestrians) {
       for (const p of pedestrians) {
         const ox = p.x - this.pos.x;
@@ -503,43 +418,27 @@ class Vehicle {
     return { throttle, steer, handbrake: false, boost: false };
   }
 }
-
-// ---- road loops for traffic (right-hand lanes) ----
-// Exported so the Phase 4 police patrols can reuse the same loops.
 export const LOOPS = {
-  // East-west spine: eastbound z=+2.5, westbound z=-2.5.
   ew: [
     { x: -160, z: 2.5 }, { x: 160, z: 2.5 }, { x: 166, z: 0 },
     { x: 160, z: -2.5 }, { x: -160, z: -2.5 }, { x: -166, z: 0 },
   ],
-  // Jalan Dermaga (x=115, wide): northbound x=118, southbound x=112.
   dermaga: [
     { x: 118, z: 55 }, { x: 118, z: -55 }, { x: 115, z: -58 },
     { x: 112, z: -55 }, { x: 112, z: 55 }, { x: 115, z: 58 },
   ],
-  // Jalan Melati (x=-115): northbound x=-112, southbound x=-118.
   melati: [
     { x: -112, z: 50 }, { x: -112, z: -50 }, { x: -115, z: -53 },
     { x: -118, z: -50 }, { x: -118, z: 50 }, { x: -115, z: 53 },
   ],
 };
-
 export function createVehicles(scene, world) {
   const colliders = world.colliders;
   const drivables = [];
   const traffic = [];
-
-  // Parked drivables — OFF the traffic lanes, on open ground by the curb.
-  // Sedan: downtown north frontage (28, -11.5), facing WEST down the clear
-  // strip between the tower row and the sidewalk lamps/palms (the old spot
-  // faced east straight into tower [38,-18] and pinned the car on its wall).
   drivables.push(new Vehicle(scene, 'sedan', 28, -11.5, -Math.PI / 2, { drivable: true }));
-  // Sports: residential, open strip between house rows (-100, -20), facing west.
   drivables.push(new Vehicle(scene, 'sports', -100, -20, -Math.PI / 2, { drivable: true }));
-  // Truck: waterfront, west shoulder of Jalan Dermaga (108, 30), facing north.
   drivables.push(new Vehicle(scene, 'truck', 108, 30, Math.PI, { drivable: true }));
-
-  // Traffic: 7 civilian cars on the three loops.
   const trafficSpecs = [
     { loop: 'ew', at: 0, speed: 9, color: TRAFFIC_COLORS[0] },
     { loop: 'ew', at: 2, speed: 7, color: TRAFFIC_COLORS[1] },
@@ -563,17 +462,10 @@ export function createVehicles(scene, world) {
     });
     traffic.push(car);
   }
-
   const all = [...drivables, ...traffic];
-
-  // Phase 4: two police interceptors. They are in `all` (so separation +
-  // player collision treat them as solid cars) but NOT in `traffic` — the
-  // police AI in npcs.js drives them (patrol / pursuit / search).
   const police = [];
   const policeSpecs = [
-    // Unit 1: east-west spine, eastbound lane, facing east.
     { loop: 'ew', at: 0, x: 10, z: 2.5, heading: Math.PI / 2 },
-    // Unit 2: Jalan Dermaga northbound lane, facing north.
     { loop: 'dermaga', at: 0, x: 118, z: 40, heading: Math.PI },
   ];
   for (const spec of policeSpecs) {
@@ -588,13 +480,9 @@ export function createVehicles(scene, world) {
     all.push(car);
   }
   let driven = null;
-
-  // One shared headlight beam, attached to the driven car only (see
-  // buildCarMesh: per-car spotlights bloated every shader program).
   const headlight = new THREE.SpotLight(0xffe9a8, 0, 34, 0.5, 0.55, 1.4);
   const headlightTarget = new THREE.Object3D();
   headlight.target = headlightTarget;
-
   function nearestDrivable(x, z, maxDist) {
     let best = null;
     let bestD = maxDist;
@@ -607,9 +495,6 @@ export function createVehicles(scene, world) {
     }
     return best ? { vehicle: best, dist: bestD } : null;
   }
-
-  // Push a walking player circle out of every vehicle's footprint
-  // (two axle circles per car, so the push respects the car's length).
   function resolvePlayer(player) {
     for (const v of all) {
       const fx = Math.sin(v.heading);
@@ -626,11 +511,6 @@ export function createVehicles(scene, world) {
       }
     }
   }
-
-  // Pairwise separation so cars never overlap each other. Returns the
-  // hardest impact (for damage + crash sound) involving the driven car,
-  // plus a list of civilian/police cars the driven car damaged (Phase 4
-  // vehicle-damage crime reporting — main.js rate-limits the reports).
   function separate() {
     let worst = 0;
     const trafficDamage = [];
@@ -650,7 +530,6 @@ export function createVehicles(scene, world) {
         a.pos.z -= nz * push;
         b.pos.x += nx * push;
         b.pos.z += nz * push;
-        // closing speed along the line -> damage if hard
         const closing = Math.abs(a.speed - b.speed);
         if (closing > 4 && (a === driven || b === driven)) {
           const hit = Math.min(closing, 14);
@@ -660,7 +539,6 @@ export function createVehicles(scene, world) {
           b.damage = Math.min(1, b.damage + dmg);
           a.speed *= 0.6;
           b.speed *= 0.6;
-          // The driven car damaging a civilian or police car is a crime.
           const victim = a === driven ? b : a;
           if (victim.traffic || victim.police) {
             trafficDamage.push({ car: victim, amount: dmg });
@@ -670,7 +548,6 @@ export function createVehicles(scene, world) {
     }
     return { worst, trafficDamage };
   }
-
   function setDriven(v) {
     driven = v;
     if (headlight.parent) headlight.parent.remove(headlight);
@@ -685,16 +562,10 @@ export function createVehicles(scene, world) {
       headlight.intensity = 0;
     }
   }
-
   function reset() {
     for (const v of all) v.reset();
     setDriven(null);
   }
-
-  // control: { throttle, steer, handbrake, boost } for the driven car, or
-  // null when the player is on foot. playerOnFoot: {x, z} or null (driving).
-  // pedestrians: [{x, z}] — traffic brakes for them (Phase 4).
-  // Returns { crashes: [intensities], trafficDamage: [{car, amount}] }.
   function update(dt, control, playerOnFoot, pedestrians) {
     const crashes = [];
     if (driven && control) {
@@ -702,8 +573,6 @@ export function createVehicles(scene, world) {
       if (c > 0) crashes.push(c);
     }
     for (const car of traffic) {
-      // A stolen traffic car is driven by the player (updated above as
-      // `driven`); never update it twice as traffic.
       if (car === driven) continue;
       const ctrl = car.trafficControl(dt, all, playerOnFoot, pedestrians);
       const c = car.update(dt, ctrl, colliders);
@@ -713,15 +582,9 @@ export function createVehicles(scene, world) {
     if (sep.worst > 0) crashes.push(sep.worst);
     return { crashes, trafficDamage: sep.trafficDamage };
   }
-
-  // Phase 4: drive one police car with a control computed by the police AI
-  // (patrol / pursuit / search). Returns the crash intensity, if any.
   function updatePolice(car, dt, control) {
     return car.update(dt, control, colliders);
   }
-
-  // Phase 4: nearest car the player can enter — a parked drivable, or a
-  // civilian traffic car (entering one is theft). Police cars are locked.
   function nearestEnterable(x, z, maxDist) {
     let best = null;
     let bestD = maxDist;
@@ -735,7 +598,6 @@ export function createVehicles(scene, world) {
     if (!best) return null;
     return { vehicle: best, dist: bestD, theft: !!best.traffic && !best.stolen };
   }
-
   return {
     drivables,
     traffic,

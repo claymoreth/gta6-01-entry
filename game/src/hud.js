@@ -1,10 +1,4 @@
-// CITY OF EMBERS — HUD + minimap + GPS + overlays (original, Phase 2).
-// DOM-based HUD over the WebGL canvas; the minimap is a 2D canvas drawn
-// from the same world layout the 3D scene uses (roads, buildings, sea,
-// POIs, player, waypoint). Clicking the minimap sets a GPS waypoint.
-
 import { WORLD_BOUNDS } from './world.js';
-
 export function createHud(world, callbacks) {
   const el = {
     hud: document.getElementById('hud'),
@@ -51,8 +45,6 @@ export function createHud(world, callbacks) {
   const yOff = (SIZE - mapH * scale) / 2;
   const toMap = (x, z) => [(x - BW.minX + 4) * scale, (z - BW.minZ + 4) * scale + yOff];
   const toWorld = (px, py) => [(px / scale) + BW.minX - 4, ((py - yOff) / scale) + BW.minZ - 4];
-
-  // Building footprints for the minimap, derived from the colliders.
   const drawable = world.colliders.filter((c) =>
     ['building', 'house', 'warehouse', 'container', 'crane', 'office', 'lighthouse'].includes(c.name));
   const fillFor = {
@@ -64,15 +56,6 @@ export function createHud(world, callbacks) {
     office: '#6a6a7a',
     lighthouse: '#e8e4da',
   };
-
-  // Toast queue with priority (Phase 4). The Phase 3 bug: a district toast
-  // fired in the same frame overwrote the welcome/exit toast, so important
-  // messages never showed. Now a toast displays for its full duration;
-  // normal messages queue behind it (max 3, oldest dropped, duplicates
-  // skipped), while 'high' priority messages (police / wanted / crime)
-  // interrupt a normal toast but queue behind a high-priority toast
-  // that is already showing — so several police messages fired in the
-  // same frame are all shown in order instead of only the last one.
   let toastTimer = 0;
   let toastShowing = false;
   let toastPriority = 'normal';
@@ -100,12 +83,10 @@ export function createHud(world, callbacks) {
       return;
     }
     if (priority === 'high' && toastPriority !== 'high') {
-      // Interrupt the normal toast: show the urgent one now.
       displayToast(text, ms, priority);
       return;
     }
     if (priority === 'high') {
-      // Queue behind the showing high toast, ahead of normal ones.
       const idx = toastQueue.findIndex((t) => t.priority !== 'high');
       const item = { text, ms, priority };
       if (idx === -1) toastQueue.push(item);
@@ -115,8 +96,6 @@ export function createHud(world, callbacks) {
     }
     while (toastQueue.length > 3) toastQueue.shift();
   }
-
-  // Minimap click -> GPS waypoint (world coords, clamped to the city).
   el.minimap.style.pointerEvents = 'auto';
   el.minimap.style.cursor = 'crosshair';
   el.minimap.addEventListener('click', (e) => {
@@ -128,20 +107,15 @@ export function createHud(world, callbacks) {
     const cz = Math.max(BW.minZ + 2, Math.min(BW.maxZ - 2, wz));
     if (callbacks && callbacks.onMinimapClick) callbacks.onMinimapClick(cx, cz);
   });
-
   let pulseT = 0;
-  // npcs: { peds: [{x, z}], police: [{x, z, car}] } — drawn as small dots
-  // (pale = civilian, blue = police) so the player can see the city alive.
   function drawMinimap(player, waypoint, vehicles, npcs) {
     const g = mctx;
     g.clearRect(0, 0, SIZE, SIZE);
     g.fillStyle = '#0d0d24';
     g.fillRect(0, 0, SIZE, SIZE);
-    // sea strip on the east edge
     g.fillStyle = '#0a2a4a';
     const [seaX] = toMap(156, 0);
     g.fillRect(seaX, yOff, SIZE - seaX, mapH * scale);
-    // roads: EW spine + 3 NS roads
     g.fillStyle = '#2c2c3e';
     const [, rz0] = toMap(0, -5);
     g.fillRect(0, rz0, SIZE, 10 * scale);
@@ -150,21 +124,17 @@ export function createHud(world, callbacks) {
       const w = (rx === 115 ? 12 : rx === -115 ? 8 : 10) * scale;
       g.fillRect(mx, yOff, w, mapH * scale);
     }
-    // park lawn
     g.fillStyle = '#1d4d28';
     const [parkX, parkY] = toMap(-152, 22);
     g.fillRect(parkX, parkY, 24 * scale, 30 * scale);
-    // pier
     g.fillStyle = '#5a3d24';
     const [pierX, pierY] = toMap(140, -4);
     g.fillRect(pierX, pierY, 32 * scale, 8 * scale);
-    // buildings
     for (const b of drawable) {
       g.fillStyle = fillFor[b.name] || '#555';
       const [x, z] = toMap(b.minX, b.minZ);
       g.fillRect(x, z, (b.maxX - b.minX) * scale, (b.maxZ - b.minZ) * scale);
     }
-    // POI dots
     for (const p of world.pois) {
       const [x, z] = toMap(p.x, p.z);
       g.fillStyle = p.color;
@@ -172,9 +142,6 @@ export function createHud(world, callbacks) {
       g.arc(x, z, p.kind === 'safehouse' ? 3.5 : 2.5, 0, Math.PI * 2);
       g.fill();
     }
-    // vehicles: traffic as pale dots, parked drivables as cyan dots.
-    // The driven car is the player arrow itself (player.pos tracks it).
-    // Police cars are blue dots (flagged via v.police).
     if (vehicles) {
       for (const v of vehicles) {
         if (v.driven) continue;
@@ -185,7 +152,6 @@ export function createHud(world, callbacks) {
         g.fill();
       }
     }
-    // Phase 4: pedestrians (pale) + foot police (blue) as minimap dots.
     if (npcs) {
       if (npcs.peds) {
         g.fillStyle = '#c9cfff';
@@ -199,7 +165,7 @@ export function createHud(world, callbacks) {
       if (npcs.police) {
         g.fillStyle = '#2a6bff';
         for (const p of npcs.police) {
-          if (p.car) continue; // police cars are drawn above via vehicles
+          if (p.car) continue;
           const [x, z] = toMap(p.x, p.z);
           g.beginPath();
           g.arc(x, z, 2.2, 0, Math.PI * 2);
@@ -207,7 +173,6 @@ export function createHud(world, callbacks) {
         }
       }
     }
-    // waypoint: line from player, then a pulsing diamond
     if (waypoint) {
       const [px, pz] = toMap(player.pos.x, player.pos.z);
       const [wx, wz] = toMap(waypoint.x, waypoint.z);
@@ -232,7 +197,6 @@ export function createHud(world, callbacks) {
       g.lineWidth = 1;
       g.stroke();
     }
-    // player arrow (rotates with facing; map up is -z / north)
     const [px, pz] = toMap(player.pos.x, player.pos.z);
     const mapAngle = Math.atan2(Math.sin(player.facing), -Math.cos(player.facing));
     g.save();
@@ -249,17 +213,11 @@ export function createHud(world, callbacks) {
     g.lineWidth = 1;
     g.stroke();
     g.restore();
-    // north marker
     g.fillStyle = '#c9cfff';
     g.font = 'bold 10px sans-serif';
     g.fillText('N', 6, 12);
   }
-
   let lastDistrict = '';
-  // drive: { driving, speedKmh, name, damage, vehicles } or null (on foot).
-  // vehicles = [{ x, z, drivable, driven, police }] for minimap dots.
-  // wanted: { level 0..5, status: '' | 'PURSUIT' | 'SEARCH' | 'HIDDEN' }.
-  // npcs: { peds, police } for minimap dots (see drawMinimap).
   function update(dt, fps, player, gps, drive, wanted, npcs) {
     pulseT += dt;
     const { district, street } = world.districtAt(player.pos.x, player.pos.z);
@@ -279,7 +237,6 @@ export function createHud(world, callbacks) {
     el.money.textContent = '$0';
     el.weapon.textContent = 'Bare Hands';
     el.ammo.textContent = '—';
-    // Phase 4: wanted stars + pursuit/search status, live.
     const wLevel = wanted ? (wanted.level || 0) : 0;
     const wStatus = wanted ? (wanted.status || '') : '';
     el.wanted.textContent = `WANTED ${'★'.repeat(wLevel)}${'☆'.repeat(5 - wLevel)}`;
@@ -290,7 +247,6 @@ export function createHud(world, callbacks) {
       el.wantedStatus.style.color =
         wStatus === 'PURSUIT' ? '#ff5d5d' : wStatus === 'SEARCH' ? '#ffd166' : '#7ef0a8';
     }
-    // Phase 3: driving panel — speedometer (km/h) + damage bar + car name.
     const driving = !!(drive && drive.driving);
     el.speedo.classList.toggle('hidden', !driving);
     if (driving) {
@@ -301,14 +257,11 @@ export function createHud(world, callbacks) {
       el.damageFill.style.width = `${dmg * 100}%`;
       el.damageNum.textContent = `${Math.round(dmg * 100)}%`;
     }
-    // GPS readout + compass arrow toward the waypoint (relative to camera).
     if (gps && gps.waypoint) {
       el.gps.classList.remove('hidden');
       el.gpsName.textContent = gps.waypoint.name || 'Destination';
       el.gpsDist.textContent = `${Math.round(gps.distance)} m`;
       el.compass.classList.remove('hidden');
-      // Camera looks along (-sin yaw, -cos yaw); bearing to waypoint is
-      // atan2(dx, dz) in world space. Arrow rotation = bearing - camBearing.
       const camBearing = Math.atan2(-Math.sin(gps.camYaw), -Math.cos(gps.camYaw));
       const rel = gps.bearing - camBearing;
       el.compassArrow.style.transform = `rotate(${rel}rad)`;
@@ -318,8 +271,6 @@ export function createHud(world, callbacks) {
     }
     drawMinimap(player, gps ? gps.waypoint : null, drive ? drive.vehicles : null, npcs || null);
   }
-
-  // Phase 3: "Tekan E untuk masuk" prompt. text=null hides it.
   function setInteract(text) {
     if (text) {
       el.interactPrompt.textContent = text;
@@ -328,12 +279,10 @@ export function createHud(world, callbacks) {
       el.interactPrompt.classList.add('hidden');
     }
   }
-
   function setMission(mission) {
     el.mission.textContent = mission.title;
     el.missionProgress.textContent = mission.progress;
   }
-
   function showStart() {
     el.startScreen.classList.remove('hidden');
     el.pauseScreen.classList.add('hidden');
@@ -350,7 +299,6 @@ export function createHud(world, callbacks) {
   function hidePause() {
     el.pauseScreen.classList.add('hidden');
   }
-
   return {
     el, showToast, update, setMission, setInteract, showStart, showGame, showPause, hidePause,
     worldToMap: toMap, mapToWorld: toWorld,

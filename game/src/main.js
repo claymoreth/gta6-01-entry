@@ -1,9 +1,3 @@
-// CITY OF EMBERS — bootstrap + game loop (original, Phase 2).
-// Third-person 3D night city: three connected districts (Downtown,
-// Residential, Waterfront) with a GPS waypoint system and a 3-objective
-// exploration mission. States: menu -> playing <-> paused.
-// Rendering: Three.js r187 (local vendor), WebGL, shadows, fog.
-
 import * as THREE from 'three';
 import { buildWorld } from './world.js';
 import { createPlayer } from './player.js';
@@ -13,11 +7,7 @@ import { createHud } from './hud.js';
 import { createVehicles } from './vehicles.js';
 import { createAudio } from './audio.js';
 import { createNpcs } from './npcs.js';
-
 const canvas = document.getElementById('game');
-// ?lowfx=1 disables antialias + shadows: a test-only switch so the
-// Playwright acceptance runs stay fast under headless SwiftShader (a
-// software rasterizer). The shipped game always runs with full effects.
 const lowFx = new URLSearchParams(window.location.search).get('lowfx') === '1';
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !lowFx });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -27,34 +17,25 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
-
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
-
 const world = buildWorld(scene, { lowFx });
 const player = createPlayer(scene, world.colliders);
 const thirdPerson = createCamera(camera, world.colliders);
 const input = createInput(canvas);
-// Phase 3: drivable cars + civilian traffic, and synthesized audio.
 const vehicles = createVehicles(scene, world);
 const audio = createAudio();
-
-// ---- GPS waypoint + mission state (Phase 2) ----
-// The mission is a 3-stop exploration tour of the city. The waypoint
-// always points at the current objective; clicking the minimap sets a
-// custom waypoint instead until it is reached, then the mission resumes.
 const MISSION_STOPS = [
   { name: 'Melati Park', x: -140, z: 37 },
   { name: 'Ember Lighthouse', x: 168, z: 0 },
   { name: 'Merdeka Plaza', x: 0, z: 0 },
 ];
-const ARRIVE_RADIUS = 5; // metres
-let missionIndex = 0; // next stop to visit
+const ARRIVE_RADIUS = 5;
+let missionIndex = 0;
 let missionDone = false;
-let customWaypoint = null; // { x, z, name } set by minimap click
-let waypoint = null; // active waypoint { x, z, name, custom: bool }
-let beacon = null; // 3D beacon mesh marking the waypoint
-
+let customWaypoint = null;
+let waypoint = null;
+let beacon = null;
 function missionText() {
   if (missionDone) return { title: 'CITY OF EMBERS — City explored!', progress: '3/3 objectives' };
   const stop = MISSION_STOPS[missionIndex];
@@ -63,7 +44,6 @@ function missionText() {
     progress: `${missionIndex}/3 objectives`,
   };
 }
-
 function refreshWaypoint() {
   if (customWaypoint) {
     waypoint = { ...customWaypoint, custom: true };
@@ -76,20 +56,13 @@ function refreshWaypoint() {
   updateBeacon();
   hud.setMission(missionText());
 }
-
 function setCustomWaypoint(x, z) {
   customWaypoint = { x, z, name: 'Destination (minimap)' };
   refreshWaypoint();
   hud.showToast('Destination marked on GPS');
 }
-
 const hud = createHud(world, { onMinimapClick: setCustomWaypoint });
-
-// Phase 4: pedestrians, police patrol/pursuit and the wanted system.
-// Created after the HUD (it reports crimes and wanted changes as toasts).
 const npcs = createNpcs(scene, world, vehicles, audio, hud);
-
-// 3D beacon: a glowing pillar + a floating diamond above the waypoint.
 function makeBeacon() {
   const g = new THREE.Group();
   const pillar = new THREE.Mesh(
@@ -120,7 +93,6 @@ function makeBeacon() {
   return g;
 }
 beacon = makeBeacon();
-
 function updateBeacon() {
   if (!waypoint) {
     beacon.visible = false;
@@ -129,7 +101,6 @@ function updateBeacon() {
   beacon.visible = true;
   beacon.position.set(waypoint.x, 0, waypoint.z);
 }
-
 function checkArrival() {
   if (!waypoint) return;
   const dx = waypoint.x - player.pos.x;
@@ -142,7 +113,6 @@ function checkArrival() {
     refreshWaypoint();
     return;
   }
-  // Mission stop reached.
   missionIndex += 1;
   if (missionIndex >= MISSION_STOPS.length) {
     missionDone = true;
@@ -152,7 +122,6 @@ function checkArrival() {
   }
   refreshWaypoint();
 }
-
 function waypointInfo() {
   if (!waypoint) return { waypoint: null, distance: 0, bearing: 0, camYaw: thirdPerson.yaw };
   const dx = waypoint.x - player.pos.x;
@@ -164,28 +133,22 @@ function waypointInfo() {
     camYaw: thirdPerson.yaw,
   };
 }
-
-// ---- Driving state (Phase 3) ----
 let driving = false;
 let drivenCar = null;
-let theftSeq = 0; // unique id per theft, so each entry is a distinct crime
-
+let theftSeq = 0;
 function enterVehicle(car) {
   driving = true;
   drivenCar = car;
   vehicles.setDriven(car);
-  player.group.visible = false; // Raka sits inside the car
-  // Camera swings behind the car for the driving view.
+  player.group.visible = false;
   thirdPerson.yaw = car.heading + Math.PI;
   thirdPerson.setDistance(10.5);
   thirdPerson.setHeight(2.8);
   hud.setInteract(null);
   hud.showToast(`${car.type.name} — W/S gas & brake · A/D steer · SPACE handbrake · E exit`);
 }
-
 function exitVehicle() {
   if (!drivenCar) return;
-  // Step out on the car's right side, clear of the body.
   const rx = Math.cos(drivenCar.heading);
   const rz = -Math.sin(drivenCar.heading);
   player.pos.set(
@@ -203,18 +166,15 @@ function exitVehicle() {
   thirdPerson.setHeight(1.7);
   hud.showToast('Exited vehicle');
 }
-
 function drivingControl() {
   const mv = input.moveVector();
   return {
-    throttle: mv.y, // W = +1 gas, S = -1 brake (moving) / reverse (stopped)
-    steer: mv.x, // D = +1 -> heading decreases -> turns right
+    throttle: mv.y,
+    steer: mv.x,
     handbrake: input.handbrake(),
     boost: mv.sprint,
   };
 }
-
-// HUD driving panel data; vehicles are minimap dots (x, z, drivable, driven).
 function driveHudInfo() {
   const list = vehicles.all.map((v) => ({
     x: v.pos.x, z: v.pos.z, drivable: v.drivable, driven: v === drivenCar,
@@ -229,22 +189,19 @@ function driveHudInfo() {
     vehicles: list,
   };
 }
-
-let state = 'menu'; // menu | playing | paused
+let state = 'menu';
 let lastTime = performance.now();
 let fps = 60;
 let fpsAccum = 0;
 let fpsFrames = 0;
 let fpsTimer = 0;
-let frames = 0; // total rendered frames (wall-clock rate probe)
-
+let frames = 0;
 function resize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
-
 function startGame() {
   player.reset();
   player.group.visible = true;
@@ -253,7 +210,7 @@ function startGame() {
   npcs.reset();
   driving = false;
   drivenCar = null;
-  audio.init(); // browsers require a user gesture for AudioContext
+  audio.init();
   missionIndex = 0;
   missionDone = false;
   customWaypoint = null;
@@ -262,20 +219,17 @@ function startGame() {
   hud.showGame();
   hud.showToast('Welcome to Ember Bay');
 }
-
 function pauseGame() {
   if (state !== 'playing') return;
   state = 'paused';
   hud.showPause();
   if (document.pointerLockElement) document.exitPointerLock();
 }
-
 function resumeGame() {
   if (state !== 'paused') return;
   state = 'playing';
   hud.hidePause();
 }
-
 function restartGame() {
   player.reset();
   player.group.visible = true;
@@ -292,26 +246,16 @@ function restartGame() {
   hud.showGame();
   hud.showToast('A new night in Ember Bay');
 }
-
 hud.el.startBtn.addEventListener('click', startGame);
 hud.el.resumeBtn.addEventListener('click', resumeGame);
 hud.el.restartBtn.addEventListener('click', restartGame);
-
-// Support ?shot=start|play|district for the automated screenshot runs:
-// the shot harness starts the game directly so screenshots show gameplay,
-// not menu. ?shot=district teleports to the waterfront for district shots.
-// (Checked here, AFTER showStart, so the auto-start is not overridden.)
 const shotParam = new URLSearchParams(window.location.search).get('shot');
-
 function frame(now) {
   requestAnimationFrame(frame);
   frames += 1;
-  const rawDt = (now - lastTime) / 1000; // wall-clock dt (unclamped)
-  const dt = Math.min(0.05, rawDt); // game dt, clamped so low FPS = slow-mo, not jumps
+  const rawDt = (now - lastTime) / 1000;
+  const dt = Math.min(0.05, rawDt);
   lastTime = now;
-
-  // FPS from REAL wall-clock dt, so the meter is honest even when the
-  // renderer is slow (a clamped-dt meter would read ~20 at 1 real FPS).
   fpsAccum += 1 / Math.max(rawDt, 1e-4);
   fpsFrames += 1;
   fpsTimer += rawDt;
@@ -321,19 +265,13 @@ function frame(now) {
     fpsFrames = 0;
     fpsTimer = 0;
   }
-
   if (input.consumePause()) {
     if (state === 'playing') pauseGame();
     else if (state === 'paused') resumeGame();
   }
-
   if (state === 'playing') {
     const mouse = input.consumeMouse();
     if (mouse.dx !== 0 || mouse.dy !== 0) thirdPerson.orbit(mouse.dx, mouse.dy);
-
-    // E: enter / exit the nearest enterable car (one-shot edge).
-    // Entering a civilian traffic car is theft (a crime if witnessed);
-    // entering one of the three drivable cars is free.
     if (input.consumeInteract()) {
       if (driving) {
         exitVehicle();
@@ -350,14 +288,10 @@ function frame(now) {
         }
       }
     }
-
     if (driving && drivenCar) {
-      // Driving: arcade car physics + traffic; the player rides the car.
       const ctrl = drivingControl();
       const result = vehicles.update(dt, ctrl, null, npcs.pedPositions());
       for (const c of result.crashes) audio.crash(c);
-      // Ramming a civilian or police car is a crime if witnessed
-      // (dedup + per-target cooldown live inside reportCrime).
       for (const td of result.trafficDamage || []) {
         const v = vehicles.all[td.index];
         if (v) {
@@ -371,15 +305,12 @@ function frame(now) {
       player.pos.copy(drivenCar.pos);
       player.facing = drivenCar.heading;
       player.speed = drivenCar.speed;
-      // Ease the camera behind the car (shortest angular path); the mouse
-      // can still orbit, but the view drifts back behind the car.
       let dyaw = (drivenCar.heading + Math.PI) - thirdPerson.yaw;
       while (dyaw > Math.PI) dyaw -= Math.PI * 2;
       while (dyaw < -Math.PI) dyaw += Math.PI * 2;
       thirdPerson.yaw += dyaw * Math.min(1, 1.5 * dt);
       hud.setInteract(null);
     } else {
-      // On foot: walk + traffic keeps moving; cars are solid to the player.
       const mv = input.moveVector();
       player.update(dt, mv, thirdPerson.yaw);
       const result = vehicles.update(dt, null, { x: player.pos.x, z: player.pos.z }, npcs.pedPositions());
@@ -387,7 +318,6 @@ function frame(now) {
       audio.setEngine(0, false);
       audio.setSkid(false);
       vehicles.resolvePlayer(player);
-      // Enter prompt when close to an enterable car (drivable or traffic).
       const near = vehicles.nearestEnterable(player.pos.x, player.pos.z, 4.5);
       if (near) {
         hud.setInteract(near.theft
@@ -397,7 +327,6 @@ function frame(now) {
         hud.setInteract(null);
       }
     }
-    // Phase 4: pedestrians, police patrol/pursuit, wanted system.
     const playerVel = driving && drivenCar
       ? { x: Math.sin(drivenCar.heading) * drivenCar.speed, z: Math.cos(drivenCar.heading) * drivenCar.speed }
       : { x: player.vel.x, z: player.vel.z };
@@ -411,7 +340,6 @@ function frame(now) {
     });
     thirdPerson.update(dt, player.pos);
     world.update(dt, now / 1000);
-    // Beacon diamond bobs + spins above the waypoint.
     if (beacon.visible) {
       const diamond = beacon.getObjectByName('beacon-diamond');
       if (diamond) {
@@ -422,17 +350,11 @@ function frame(now) {
     checkArrival();
     hud.update(dt, fps, player, waypointInfo(), driveHudInfo(), npcs.wantedInfo(), npcs.minimapInfo());
   } else if (state === 'menu') {
-    // Slow cinematic orbit behind the spawn while on the menu.
     thirdPerson.yaw += dt * 0.05;
     thirdPerson.update(dt, player.pos);
   }
-  // paused: freeze the world, keep rendering the last frame.
-
   renderer.render(scene, camera);
 }
-
-// Debug hooks for the Playwright acceptance tests (read-only state +
-// test-only teleport / waypoint setters).
 window.__embers = {
   get state() { return state; },
   get playerPos() { return { x: player.pos.x, y: player.pos.y, z: player.pos.z }; },
@@ -451,7 +373,6 @@ window.__embers = {
   get mission() {
     return { index: missionIndex, done: missionDone, text: missionText() };
   },
-  // Phase 3: driving + vehicle state.
   get driving() { return driving; },
   get drivenCar() {
     if (!drivenCar) return null;
@@ -469,8 +390,6 @@ window.__embers = {
       x: v.pos.x, z: v.pos.z, heading: v.heading, speed: v.speed, damage: v.damage,
     }));
   },
-  // Test-only: enter a drivable car by type name (teleports the player
-  // next to it first, mirroring walking up and pressing E).
   enterCar(typeName) {
     const car = vehicles.drivables.find((v) => v.typeName === typeName);
     if (!car) return false;
@@ -481,8 +400,6 @@ window.__embers = {
     enterVehicle(car);
     return true;
   },
-  // Test-only: move a drivable car to a known spot, undamaged, stopped.
-  // Optional 5th arg sets damage (0..1) to verify the damage visuals.
   placeCar(typeName, x, z, heading, damage) {
     const car = vehicles.drivables.find((v) => v.typeName === typeName);
     if (!car) return false;
@@ -496,8 +413,6 @@ window.__embers = {
     return true;
   },
   exitCar() { if (driving) exitVehicle(); return !driving; },
-  // Phase 4: NPC / police / wanted debug hooks (read-only state + the
-  // test-only setters defined in npcs.js).
   get npcs() { return npcs.debug; },
   debugCrime(type, eventId) { return npcs.debug.debugCrime(type, eventId); },
   debugSetHeat(n) { return npcs.debug.debugSetHeat(n); },
@@ -510,49 +425,34 @@ window.__embers = {
   debugTriggerDanger(x, z, radius) { return npcs.debug.debugTriggerDanger(x, z, radius); },
   get pois() { return world.pois.map((p) => ({ ...p })); },
   get bounds() { return { ...world.bounds }; },
-  // Minimap pixel (canvas coords, 180x180) for a world point, so tests
-  // can click the minimap at an exact world location.
   minimapPixel(x, z) { const [px, py] = hud.worldToMap(x, z); return { x: px, y: py }; },
   start: startGame,
-  // Test-only: move the player instantly (acceptance tests use it to
-  // position the player near a district boundary or a waypoint).
   teleport(x, z) {
     player.pos.set(x, 0, z);
     player.vel.set(0, 0, 0);
   },
-  // Test-only: set the third-person camera yaw (screenshot framing).
   setCamYaw(yaw) { thirdPerson.yaw = yaw; return thirdPerson.yaw; },
-  // Test-only: set the player facing (direction Raka looks).
   setFacing(yaw) { player.facing = yaw; return player.facing; },
-  // Test-only: set a custom waypoint, mirroring a minimap click.
   setWaypoint(x, z, name) {
     setCustomWaypoint(x, z);
     if (name && waypoint) waypoint.name = name;
   },
 };
-
 hud.showStart();
 refreshWaypoint();
 if (shotParam === 'play') startGame();
 if (shotParam === 'drive') {
   startGame();
-  // Enter the sedan and roll it east on the spine road so the shot shows
-  // the driving camera behind the car, the car itself and a live speedometer.
   window.__embers.enterCar('sedan');
   if (drivenCar) {
-    drivenCar.pos.set(30, 0, 2.5); // eastbound lane of Jalan Merdeka
-    drivenCar.heading = Math.PI / 2; // east
-    drivenCar.speed = 9; // gentle roll; the test also drives it with W
+    drivenCar.pos.set(30, 0, 2.5);
+    drivenCar.heading = Math.PI / 2;
+    drivenCar.speed = 9;
     thirdPerson.yaw = drivenCar.heading + Math.PI;
   }
 }
 if (shotParam === 'district') {
   startGame();
-  // Waterfront vantage: on the EW road just before the pier, facing east
-  // down the pier toward the lighthouse, so the shot shows the pier, the
-  // sea, the lighthouse beacon and the waterfront skyline.
-  // Camera yaw -PI/2 puts the camera WEST of the player, looking east
-  // (behind the player, who faces +x / east).
   player.pos.set(132, 0, 0);
   player.facing = Math.PI / 2;
   thirdPerson.yaw = -Math.PI / 2;
@@ -561,10 +461,6 @@ if (shotParam === 'district') {
 }
 if (shotParam === 'pursuit') {
   startGame();
-  // Pursuit scene: the player on foot on Jalan Merdeka, wanted level 3,
-  // a police interceptor closing in behind them. The active-set recompute
-  // (every 2 game-s) sends the nearest units to pursue; the test waits
-  // for the pursuit to develop before screenshotting.
   player.pos.set(20, 0, 0);
   player.facing = Math.PI / 2;
   thirdPerson.yaw = -Math.PI / 2;
@@ -574,6 +470,6 @@ if (shotParam === 'pursuit') {
   pc.speed = 0;
   pc.group.position.copy(pc.pos);
   pc.group.rotation.y = pc.heading;
-  window.__embers.debugSetHeat(45); // level 3
+  window.__embers.debugSetHeat(45);
 }
 requestAnimationFrame(frame);

@@ -1,21 +1,10 @@
-// CITY OF EMBERS — pedestrians, police & wanted system (original, Phase 4).
-// Original animated 3D civilians walk the sidewalks, react to danger and
-// flee; police (3 foot officers + 2 interceptors) patrol, detect crimes,
-// pursue, search and lose the player; a 0-5 star wanted system responds to
-// real gameplay (vehicle theft, damaging civilian cars, hitting a
-// pedestrian) and decays only while the player stays hidden. No weapons or
-// combat here — that is Phase 5. All player-facing text is English.
-// No external assets, no network requests, no per-NPC lights.
-
 import * as THREE from 'three';
 import { resolveCircle, clamp } from './collision.js';
 import { WORLD_BOUNDS } from './world.js';
-
-// ---- tuning ----
 const PED_COUNT = 14;
 const FOOT_POLICE_COUNT = 3;
 const WANTED_HEAT = { theft: 15, damage: 20, policeDamage: 25, pedHit: 35 };
-const LEVEL_HEAT = [0, 1, 21, 41, 61, 86]; // level i starts at LEVEL_HEAT[i]
+const LEVEL_HEAT = [0, 1, 21, 41, 61, 86];
 function levelForHeat(h) {
   if (h <= 0) return 0;
   if (h < LEVEL_HEAT[2]) return 1;
@@ -24,19 +13,16 @@ function levelForHeat(h) {
   if (h < LEVEL_HEAT[5]) return 4;
   return 5;
 }
-const HEAT_DECAY = 1.5; // heat per game-second while hidden
-const HEAT_DECAY_HIDING = 3.0; // heat per game-second while hidden in a hiding zone
-const WITNESS_RANGE_PED = 25; // a pedestrian can witness a crime this far
-const WITNESS_RANGE_POLICE = 45; // a police unit can witness a crime this far
-const LOS_RANGE_FOOT = 45; // a foot officer can spot the player this far
-const LOS_RANGE_CAR = 60; // a police car can spot the player this far
-const DAMAGE_CRIME_COOLDOWN = 5; // game-seconds between damage crimes per target car
-const PED_REPORT_DELAY = 1.5; // game-seconds before a pedestrian witness reports
-const LOSE_SIGHT_TIME = 2; // game-seconds without LOS before a unit searches
-const ACTIVE_RECOMPUTE = 2; // game-seconds between pursuer-set recomputes
-
-// Hiding zones: safehouses + alleys. While unseen inside one, wanted heat
-// decays twice as fast — the fair escape the player needs.
+const HEAT_DECAY = 1.5;
+const HEAT_DECAY_HIDING = 3.0;
+const WITNESS_RANGE_PED = 25;
+const WITNESS_RANGE_POLICE = 45;
+const LOS_RANGE_FOOT = 45;
+const LOS_RANGE_CAR = 60;
+const DAMAGE_CRIME_COOLDOWN = 5;
+const PED_REPORT_DELAY = 1.5;
+const LOSE_SIGHT_TIME = 2;
+const ACTIVE_RECOMPUTE = 2;
 const HIDING_ZONES = [
   { x: -155, z: -10, r: 8, name: 'Safehouse — Green House' },
   { x: 132, z: 45, r: 8, name: 'Safehouse — Pier Office' },
@@ -49,49 +35,29 @@ function inHidingZone(x, z) {
   }
   return null;
 }
-
-// ---- pedestrian routes ----
-// Street walkers use ping-pong sidewalk segments (out and back along one
-// sidewalk — the natural pattern for a sidewalk, and it never crosses a
-// road). Park and pier walkers use rectangular loops.
 const PED_SEGMENTS = [
-  [{ x: -50, z: -6.5 }, { x: 50, z: -6.5 }], // downtown north sidewalk
-  [{ x: -50, z: 6.5 }, { x: 50, z: 6.5 }], // downtown south sidewalk
-  [{ x: -6.5, z: -50 }, { x: -6.5, z: 50 }], // Jalan Pantai west sidewalk
-  [{ x: 6.5, z: -50 }, { x: 6.5, z: 50 }], // Jalan Pantai east sidewalk
-  [{ x: -160, z: -4.5 }, { x: -70, z: -4.5 }], // residential north sidewalk (z=-4.5: the z=-10 house row blocks z=-6.5)
-  [{ x: -160, z: 6.5 }, { x: -70, z: 6.5 }], // residential south sidewalk
-  [{ x: -120.5, z: -50 }, { x: -120.5, z: 50 }], // Melati west sidewalk
-  [{ x: -109.5, z: -50 }, { x: -109.5, z: 50 }], // Melati east sidewalk
-  [{ x: 70, z: -6.5 }, { x: 150, z: -6.5 }], // waterfront north sidewalk
-  [{ x: 70, z: 6.5 }, { x: 150, z: 6.5 }], // waterfront south sidewalk
-  [{ x: 107.5, z: -50 }, { x: 107.5, z: 50 }], // Dermaga west sidewalk
-  [{ x: 122.5, z: -50 }, { x: 122.5, z: 50 }], // Dermaga east sidewalk
+  [{ x: -50, z: -6.5 }, { x: 50, z: -6.5 }],
+  [{ x: -50, z: 6.5 }, { x: 50, z: 6.5 }],
+  [{ x: -6.5, z: -50 }, { x: -6.5, z: 50 }],
+  [{ x: 6.5, z: -50 }, { x: 6.5, z: 50 }],
+  [{ x: -160, z: -4.5 }, { x: -70, z: -4.5 }],
+  [{ x: -160, z: 6.5 }, { x: -70, z: 6.5 }],
+  [{ x: -120.5, z: -50 }, { x: -120.5, z: 50 }],
+  [{ x: -109.5, z: -50 }, { x: -109.5, z: 50 }],
+  [{ x: 70, z: -6.5 }, { x: 150, z: -6.5 }],
+  [{ x: 70, z: 6.5 }, { x: 150, z: 6.5 }],
+  [{ x: 107.5, z: -50 }, { x: 107.5, z: 50 }],
+  [{ x: 122.5, z: -50 }, { x: 122.5, z: 50 }],
 ];
 const PED_LOOPS = [
-  // Melati Park rectangle
   [{ x: -152, z: 24 }, { x: -130, z: 24 }, { x: -130, z: 50 }, { x: -152, z: 50 }],
-  // Pier rectangle
   [{ x: 142, z: -3 }, { x: 168, z: -3 }, { x: 168, z: 3 }, { x: 142, z: 3 }],
 ];
-// Foot-police patrol segments (one officer per district).
 const POLICE_PATROLS = [
-  [{ x: -50, z: -6.5 }, { x: 50, z: -6.5 }], // downtown north sidewalk
-  [{ x: -120.5, z: -50 }, { x: -120.5, z: 50 }], // Melati west sidewalk
-  [{ x: 107.5, z: -50 }, { x: 107.5, z: 50 }], // Dermaga west sidewalk
+  [{ x: -50, z: -6.5 }, { x: 50, z: -6.5 }],
+  [{ x: -120.5, z: -50 }, { x: -120.5, z: 50 }],
+  [{ x: 107.5, z: -50 }, { x: 107.5, z: 50 }],
 ];
-
-// ---- instanced humanoid renderer ----
-// All walkers (pedestrians + foot police) share five InstancedMeshes
-// (torso, head, hair, arm x2, leg x2) plus two small ones for police gear
-// (cap, badge) — one draw call per part type instead of ~7 per walker.
-// Per-instance colours give the clothing / skin / hair variation; the
-// walk swing is computed per instance from the walker's walk phase.
-// This is what keeps Phase 4's 17 walkers from doubling the scene's
-// draw calls (measured before this change: 343 calls at 640x360 lowfx,
-// 7.8 -> 4.2 FPS; after: ~235 calls, back near the Phase 3 baseline).
-// Limb geometries are translated so their origin sits at the joint
-// (hip / shoulder), so a part matrix is just T(pivot) * Rx(swing).
 const GEO = {
   torso: new THREE.BoxGeometry(0.46, 0.58, 0.26),
   head: new THREE.BoxGeometry(0.28, 0.3, 0.28),
@@ -107,7 +73,6 @@ const SKIN_COLORS = [0xc98d64, 0x8a5a3a];
 const HAIR_COLORS = [0x14100c, 0x4a3220];
 const POLICE_SHIRT = 0x1a2a4a;
 const POLICE_PANTS = 0x14161c;
-
 class HumanoidRenderer {
   constructor(scene, count, policeCount) {
     this.count = count;
@@ -132,8 +97,6 @@ class HumanoidRenderer {
     this._o = new THREE.Object3D();
     this._c = new THREE.Color();
   }
-
-  // Per-instance colours (set once at spawn; they never change).
   setColors(i, shirt, pants, skin, hair) {
     this._c.setHex(shirt);
     this.torso.setColorAt(i, this._c);
@@ -150,8 +113,6 @@ class HumanoidRenderer {
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
     }
   }
-
-  // Compose one part matrix: base * T(px,py,pz) * Rx(rx).
   _place(mesh, idx, px, py, pz, rx) {
     this._o.position.set(px, py, pz);
     this._o.rotation.set(rx, 0, 0);
@@ -160,11 +121,6 @@ class HumanoidRenderer {
     this._part.multiplyMatrices(this._base, this._o.matrix);
     mesh.setMatrixAt(idx, this._part);
   }
-
-  // Pose one walker. `swing` is the signed swing angle of the left leg
-  // (right leg mirrors it, arms swing opposite); 0 = limbs at rest.
-  // `lying` flattens the walker onto the ground (knocked down).
-  // `policeIndex` >= 0 positions the cap + badge for a foot officer.
   setPose(i, pos, heading, swing, height, lying, policeIndex) {
     const base = this._base;
     base.makeTranslation(pos.x, lying ? 0.25 : 0, pos.z);
@@ -192,10 +148,6 @@ class HumanoidRenderer {
     }
   }
 }
-
-// Push a pedestrian circle out of every car's footprint (two axle circles
-// per car, same approach as vehicles.resolvePlayer). Keeps walkers from
-// standing inside cars.
 function resolvePedFromCars(x, z, vehicles) {
   let px = x;
   let pz = z;
@@ -218,17 +170,12 @@ function resolvePedFromCars(x, z, vehicles) {
   }
   return { x: px, z: pz };
 }
-
-// ---- pedestrian ----
-// A walker is pure state (position, heading, walk phase, height); its
-// visible body is one slot in the shared HumanoidRenderer, posed via
-// syncPose() whenever the state changes.
 class Pedestrian {
   constructor(renderer, route, index) {
     this.renderer = renderer;
-    this.index = index; // slot in the instanced meshes
+    this.index = index;
     const vi = index;
-    this.height = 0.92 + ((vi * 37) % 16) / 100; // 0.92..1.07
+    this.height = 0.92 + ((vi * 37) % 16) / 100;
     renderer.setColors(
       index,
       SHIRT_COLORS[vi % SHIRT_COLORS.length],
@@ -236,11 +183,11 @@ class Pedestrian {
       SKIN_COLORS[vi % SKIN_COLORS.length],
       HAIR_COLORS[Math.floor(vi / 2) % HAIR_COLORS.length],
     );
-    this.route = route; // { kind: 'segment'|'loop', points: [{x,z}] }
-    this.speed = 1.0 + ((vi * 13) % 6) / 10; // 1.0..1.5 m/s
-    this.state = 'walk'; // walk | idle | wait | flee | down
+    this.route = route;
+    this.speed = 1.0 + ((vi * 13) % 6) / 10;
+    this.state = 'walk';
     this.wpIndex = 0;
-    this.dir = 1; // ping-pong direction (+1 toward points[1], -1 toward points[0])
+    this.dir = 1;
     const start = route.points[0];
     this.pos = new THREE.Vector3(start.x, 0, start.z);
     this.heading = Math.atan2(route.points[1].x - start.x, route.points[1].z - start.z);
@@ -252,19 +199,16 @@ class Pedestrian {
     this.downTimer = 0;
     this.fleeFrom = { x: 0, z: 0 };
     this.frameCount = 0;
-    this.frameSkip = 1; // distance-based: far walkers update less often
+    this.frameSkip = 1;
     this.stuckTimer = 0;
     this.stuckX = start.x;
     this.stuckZ = start.z;
     this.syncPose();
   }
-
-  // Push the current state into the instanced renderer.
   syncPose() {
     const swing = Math.sin(this.walkPhase) * this.swingAmp;
     this.renderer.setPose(this.index, this.pos, this.heading, swing, this.height, this.lying, -1);
   }
-
   reset() {
     const start = this.route.points[0];
     this.pos.set(start.x, 0, start.z);
@@ -284,15 +228,12 @@ class Pedestrian {
     this.stuckZ = start.z;
     this.syncPose();
   }
-
-  // Current destination waypoint.
   targetPoint() {
     if (this.route.kind === 'segment') {
       return this.dir > 0 ? this.route.points[1] : this.route.points[0];
     }
     return this.route.points[this.wpIndex];
   }
-
   advanceWaypoint() {
     if (this.route.kind === 'segment') {
       this.dir = -this.dir;
@@ -300,8 +241,6 @@ class Pedestrian {
       this.wpIndex = (this.wpIndex + 1) % this.route.points.length;
     }
   }
-
-  // Nearest route point to walk back to after fleeing.
   retargetNearest() {
     let best = 0;
     let bestD = Infinity;
@@ -319,15 +258,13 @@ class Pedestrian {
       this.wpIndex = best;
     }
   }
-
-  // Is a moving vehicle heading toward this pedestrian? (Wait for it.)
   vehicleAhead(ctx) {
     for (const v of ctx.vehicles) {
       const dx = v.pos.x - this.pos.x;
       const dz = v.pos.z - this.pos.z;
       const d = Math.hypot(dx, dz);
       if (d > 4 || d < 0.01) continue;
-      if (Math.abs(v.speed) < 0.5) continue; // parked cars don't block
+      if (Math.abs(v.speed) < 0.5) continue;
       const fx = Math.sin(v.heading);
       const fz = Math.cos(v.heading);
       const dot = ((dx * fx + dz * fz) / d) * Math.sign(v.speed);
@@ -335,9 +272,6 @@ class Pedestrian {
     }
     return false;
   }
-
-  // Move toward (tx, tz) at `speed`, sliding around world colliders and
-  // out of car footprints. Returns the distance actually travelled.
   moveToward(tx, tz, speed, dt, ctx) {
     const dx = tx - this.pos.x;
     const dz = tz - this.pos.z;
@@ -354,45 +288,35 @@ class Pedestrian {
     const moved = Math.hypot(pushed.x - this.pos.x, pushed.z - this.pos.z);
     this.pos.x = pushed.x;
     this.pos.z = pushed.z;
-    // Face the movement direction smoothly.
     const targetYaw = Math.atan2(vx, vz);
     let d = targetYaw - this.heading;
     while (d > Math.PI) d -= Math.PI * 2;
     while (d < -Math.PI) d += Math.PI * 2;
     this.heading += d * Math.min(1, 10 * dt);
-    // Walk swing (faster + bigger when fleeing).
     const running = speed > 2;
     this.swingAmp = running ? 0.85 : 0.6;
     this.walkPhase += speed * dt * 2.2 * (running ? 1.4 : 1);
     this.syncPose();
     return moved;
   }
-
-  // Flee from a danger point (called by the manager).
   fleeFromPoint(x, z, seconds) {
     if (this.state === 'down') return;
     this.state = 'flee';
     this.fleeFrom = { x, z };
     this.fleeTimer = seconds;
   }
-
-  // Knocked down by a vehicle (lying flat, then gets up and flees).
   knockDown(x, z) {
     if (this.state === 'down') return;
     this.state = 'down';
     this.downTimer = 4;
     this.fleeFrom = { x, z };
-    this.lying = true; // the renderer flattens the body onto the ground
+    this.lying = true;
     this.syncPose();
   }
-
   update(dt, ctx) {
     this.frameCount++;
     if (this.frameCount % this.frameSkip !== 0) return;
-    // Distance-based update: a skipped walker advances by the skipped
-    // frames' worth of dt, so its speed stays correct at range.
     const edt = dt * this.frameSkip;
-
     if (this.state === 'down') {
       this.downTimer -= edt;
       if (this.downTimer <= 0) {
@@ -417,7 +341,7 @@ class Pedestrian {
     }
     if (this.state === 'idle') {
       this.idleTimer -= edt;
-      this.swingAmp = 0; // limbs settle
+      this.swingAmp = 0;
       this.syncPose();
       if (this.idleTimer <= 0) this.state = 'walk';
       return;
@@ -426,12 +350,11 @@ class Pedestrian {
       if (!this.vehicleAhead(ctx)) {
         this.state = 'walk';
       } else {
-        this.swingAmp = 0; // limbs settle
+        this.swingAmp = 0;
         this.syncPose();
         return;
       }
     }
-    // Walk toward the current waypoint.
     const wp = this.targetPoint();
     const dx = wp.x - this.pos.x;
     const dz = wp.z - this.pos.z;
@@ -449,8 +372,6 @@ class Pedestrian {
       return;
     }
     const moved = this.moveToward(wp.x, wp.z, this.speed, edt, ctx);
-    // Stuck check: barely moved for 3 game-seconds while walking -> skip
-    // to the next waypoint instead of pushing a wall forever.
     if (moved < 0.02) {
       this.stuckTimer += edt;
       if (this.stuckTimer > 3) {
@@ -464,17 +385,12 @@ class Pedestrian {
     this.stuckZ = this.pos.z;
   }
 }
-
-// ---- foot police officer ----
-// Navy uniform + cap + badge, one slot in the shared HumanoidRenderer.
-// State machine: patrol -> investigate -> pursue -> search. Runs toward
-// the player while pursuing, slides around buildings via resolveCircle.
 class FootPolice {
   constructor(renderer, patrol, index, policeIndex) {
-    this.kind = 'foot'; // unit kind: 'foot' | 'car' (car units set it too)
+    this.kind = 'foot';
     this.renderer = renderer;
-    this.index = index; // slot in the instanced meshes (after the peds)
-    this.policeIndex = policeIndex; // slot in the cap/badge meshes
+    this.index = index;
+    this.policeIndex = policeIndex;
     this.height = 1.0;
     renderer.setColors(
       index,
@@ -483,22 +399,22 @@ class FootPolice {
       SKIN_COLORS[index % SKIN_COLORS.length],
       HAIR_COLORS[index % HAIR_COLORS.length],
     );
-    this.patrol = patrol; // { kind: 'segment', points: [{x,z}] }
+    this.patrol = patrol;
     this.dir = 1;
     const start = patrol.points[0];
     this.pos = new THREE.Vector3(start.x, 0, start.z);
     this.heading = Math.atan2(patrol.points[1].x - start.x, patrol.points[1].z - start.z);
     this.walkPhase = index * 2.1;
     this.swingAmp = 0.6;
-    this.state = 'patrol'; // patrol | investigate | pursue | search
+    this.state = 'patrol';
     this.target = { x: start.x, z: start.z };
     this.searchPoints = [];
     this.searchIndex = 0;
     this.scanTimer = 0;
     this.seesPlayer = false;
     this.loseTimer = 0;
-    this.losTimer = index * 0.15; // stagger LOS checks across units
-    this.holdTimer = 0; // test hook: hold in place
+    this.losTimer = index * 0.15;
+    this.holdTimer = 0;
     this.stuckTimer = 0;
     this.stuckX = start.x;
     this.stuckZ = start.z;
@@ -506,13 +422,10 @@ class FootPolice {
     this.sidestepDir = 1;
     this.syncPose();
   }
-
-  // Push the current state into the instanced renderer.
   syncPose() {
     const swing = Math.sin(this.walkPhase) * this.swingAmp;
     this.renderer.setPose(this.index, this.pos, this.heading, swing, this.height, false, this.policeIndex);
   }
-
   reset() {
     const start = this.patrol.points[0];
     this.pos.set(start.x, 0, start.z);
@@ -531,11 +444,9 @@ class FootPolice {
     this.sidestepTimer = 0;
     this.syncPose();
   }
-
   patrolTarget() {
     return this.dir > 0 ? this.patrol.points[1] : this.patrol.points[0];
   }
-
   moveToward(tx, tz, speed, dt, ctx) {
     const dx = tx - this.pos.x;
     const dz = tz - this.pos.z;
@@ -563,7 +474,6 @@ class FootPolice {
     this.syncPose();
     return moved;
   }
-
   update(dt, ctx) {
     if (this.holdTimer > 0) {
       this.holdTimer -= dt;
@@ -581,15 +491,13 @@ class FootPolice {
       tx = ctx.playerPos.x;
       tz = ctx.playerPos.z;
     } else {
-      // investigate / search: head for the current search target.
       const t = this.searchPoints[this.searchIndex] || this.target;
       tx = t.x;
       tz = t.z;
       if (Math.hypot(tx - this.pos.x, tz - this.pos.z) < 2.5) {
         if (this.state === 'investigate') {
-          // Arrived at the incident: scan the area, then search or patrol.
           this.scanTimer += dt;
-          this.swingAmp = 0; // limbs settle while scanning
+          this.swingAmp = 0;
           this.syncPose();
           if (this.scanTimer > 2) {
             this.scanTimer = 0;
@@ -602,7 +510,6 @@ class FootPolice {
           }
           return;
         }
-        // Search: move to the next search point (or finish the sweep).
         this.searchIndex++;
         if (this.searchIndex >= this.searchPoints.length) {
           this.searchIndex = 0;
@@ -612,10 +519,6 @@ class FootPolice {
         return;
       }
     }
-    // Sidestep recovery: if stuck while moving to a target (pursue,
-    // investigate or search), strafe perpendicular to slip around the
-    // building instead of pushing against it forever. Patrol routes are
-    // on clear sidewalks and do not need it.
     let mx = tx;
     let mz = tz;
     if (this.state !== 'patrol' && this.sidestepTimer > 0) {
@@ -642,7 +545,6 @@ class FootPolice {
     this.stuckX = this.pos.x;
     this.stuckZ = this.pos.z;
   }
-
   buildSearchPoints(lkp) {
     this.searchPoints = [];
     for (let i = 0; i < 3; i++) {
@@ -656,10 +558,6 @@ class FootPolice {
     this.searchIndex = 0;
   }
 }
-
-// ---- police car helpers ----
-// Snap a point to the nearest road centreline (EW spine z=0, or one of
-// the three north-south roads) so police cars drive on roads, not blocks.
 function snapToRoad(x, z) {
   const cands = [
     { x: clamp(x, -170, 170), z: 0 },
@@ -678,8 +576,6 @@ function snapToRoad(x, z) {
   }
   return best;
 }
-
-// Pure-pursuit steering toward a target point (same pattern as traffic).
 function steerToward(car, tx, tz) {
   const dx = tx - car.pos.x;
   const dz = tz - car.pos.z;
@@ -689,14 +585,10 @@ function steerToward(car, tx, tz) {
   while (dh < -Math.PI) dh += Math.PI * 2;
   return clamp(dh * 1.6, -1, 1);
 }
-
 export function createNpcs(scene, world, vehicles, audio, hud) {
   const colliders = world.colliders;
-  // Tall colliders block line of sight at eye height (lamps, palms,
-  // benches and rails are too low to hide behind).
   const tallColliders = colliders.filter((c) =>
     c.maxY > 3 && ['building', 'house', 'warehouse', 'container', 'crane', 'office', 'lighthouse'].includes(c.name));
-
   function losClear(x0, z0, x1, z1) {
     for (let i = 1; i < 10; i++) {
       const t = i / 10;
@@ -708,9 +600,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     }
     return true;
   }
-
-  // ---- population ----
-  // One shared instanced renderer for all 17 walkers (see the class above).
   const renderer = new HumanoidRenderer(scene, PED_SEGMENTS.length + PED_LOOPS.length + FOOT_POLICE_COUNT, FOOT_POLICE_COUNT);
   const pedestrians = [];
   for (let i = 0; i < PED_SEGMENTS.length; i++) {
@@ -723,12 +612,11 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
   for (let i = 0; i < FOOT_POLICE_COUNT; i++) {
     footPolice.push(new FootPolice(renderer, { kind: 'segment', points: POLICE_PATROLS[i] }, PED_SEGMENTS.length + PED_LOOPS.length + i, i));
   }
-  // Police car units (the cars themselves live in vehicles.police).
   const carUnits = vehicles.police.map((car, i) => ({
     kind: 'car',
     car,
     index: i,
-    pos: car.pos, // alias: car.pos is the live Vector3
+    pos: car.pos,
     state: 'patrol',
     target: { x: car.pos.x, z: car.pos.z },
     searchPoints: [],
@@ -736,7 +624,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     scanTimer: 0,
     seesPlayer: false,
     loseTimer: 0,
-    losTimer: i * 0.25, // stagger LOS checks
+    losTimer: i * 0.25,
     holdTimer: 0,
     stuckTimer: 0,
     recoverTimer: 0,
@@ -745,12 +633,10 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     disabledTimer: 0,
   }));
   const units = [...footPolice, ...carUnits];
-
-  // ---- wanted state ----
   let gameTime = 0;
   let heat = 0;
   let level = 0;
-  let status = ''; // '' | 'PURSUIT' | 'SEARCH' | 'HIDDEN'
+  let status = '';
   let prevStatus = '';
   let lastKnown = { x: 0, z: 0 };
   let lastSeenTime = -100;
@@ -760,13 +646,11 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
   let crimeSeq = 0;
   const crimeLog = [];
   const seenEventIds = new Set();
-  const damageCrimeAt = new Map(); // target car -> last crime game-time
-  const pendingReports = []; // { time, heat, x, z } — pedestrian witness reports
-
+  const damageCrimeAt = new Map();
+  const pendingReports = [];
   function notify(text, ms) {
     hud.showToast(text, ms ?? 3000, 'high');
   }
-
   function applyHeat(amount, x, z) {
     const oldLevel = level;
     heat = Math.min(100, heat + amount);
@@ -778,9 +662,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       audio.blip();
     }
   }
-
-  // Send the nearest unit to the scene immediately; the active-set
-  // recompute takes over coordination from there.
   function dispatchTo(x, z) {
     const sorted = [...units].sort(
       (a, b) => Math.hypot(a.pos.x - x, a.pos.z - z) - Math.hypot(b.pos.x - x, b.pos.z - z),
@@ -798,8 +679,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     const d = world.districtAt(x, z);
     notify(`Dispatch: Units responding to ${d.district}`);
   }
-
-  // Make every pedestrian within `radius` of (x, z) flee.
   function triggerDanger(x, z, radius) {
     for (const p of pedestrians) {
       if (p.state === 'down') continue;
@@ -807,13 +686,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       if (d <= radius) p.fleeFromPoint(x, z, 4 + Math.random() * 2);
     }
   }
-
-  // Report a crime at (x, z). Detection is real: a police unit within
-  // 45 m with a clear line of sight identifies the player at once; a
-  // pedestrian within 25 m with LOS reports after a short delay; with no
-  // witness at all the crime goes unnoticed. One event raises wanted at
-  // most once (eventId dedup + per-target cooldown for damage).
-  // Returns { witnessed, byPolice, duplicate }.
   function reportCrime(type, x, z, opts) {
     opts = opts || {};
     if (opts.eventId) {
@@ -871,8 +743,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     }
     return { witnessed: false, byPolice: false, duplicate: false };
   }
-
-  // ---- police car AI ----
   function buildCarSearchPoints(u, lkp) {
     u.searchPoints = [];
     for (let i = 0; i < 3; i++) {
@@ -886,7 +756,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     }
     u.searchIndex = 0;
   }
-
   function applyStuckRecovery(u, car, control, dt) {
     if (u.recoverTimer > 0) {
       u.recoverTimer -= dt;
@@ -904,7 +773,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     }
     return control;
   }
-
   function updateLightBar(u, dt) {
     const bar = u.car.lightBar;
     if (!bar) return;
@@ -925,7 +793,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       bar.blueMat.color.setHex(u.flashOn ? 0x111155 : 0x2a6bff);
     }
   }
-
   function updatePoliceCar(u, dt, ctx) {
     const car = u.car;
     if (u.holdTimer > 0) {
@@ -934,8 +801,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       updateLightBar(u, dt);
       return;
     }
-    // Wrecked interceptor: stop, then recover (damage reset, back on patrol
-    // from its current spot — no teleport).
     if (car.damage >= 0.95) {
       u.disabledTimer += dt;
       vehicles.updatePolice(car, dt, { throttle: 0, steer: 0, handbrake: true, boost: false });
@@ -952,8 +817,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     if (u.state === 'patrol') {
       control = car.trafficControl(dt, vehicles.all, ctx.playerOnFoot, ctx.pedPositions);
     } else if (u.state === 'pursue') {
-      // Follow roads until close, then close in directly. At level 4+ the
-      // car aims ahead of the player (intercept) and uses boost.
       const p = ctx.playerPos;
       const d = Math.hypot(p.x - car.pos.x, p.z - car.pos.z);
       let tx = p.x;
@@ -976,7 +839,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       };
       control = applyStuckRecovery(u, car, control, dt);
     } else {
-      // investigate / search: drive to the target on the road network.
       const t = u.searchPoints[u.searchIndex] || u.target;
       const snapped = snapToRoad(t.x, t.z);
       const d = Math.hypot(snapped.x - car.pos.x, snapped.z - car.pos.z);
@@ -1012,11 +874,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     if (crash > 0) audio.crash(crash);
     updateLightBar(u, dt);
   }
-
-  // ---- active pursuer set ----
-  // The N nearest units (N = wanted level, max 5) are the active response;
-  // the rest stay on patrol. Recomputed every 2 game-seconds so the set
-  // follows the player — this is what makes levels feel different.
   function recomputeActive() {
     const n = Math.min(level, units.length);
     const sorted = [...units].sort(
@@ -1034,9 +891,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
             u.searchIndex = 0;
           }
         } else if (u.state === 'investigate') {
-          // Re-target to the current last known position: the player may
-          // have been seen somewhere new since this unit was dispatched,
-          // and it must head for the freshest sighting, not a stale one.
           u.target = { ...lastKnown };
         }
       } else if (u.state !== 'patrol') {
@@ -1046,14 +900,9 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       }
     }
   }
-
-  // ---- main update ----
-  // ctx: { playerPos, playerVel, playerOnFoot, driving, drivenCar, vehicles }
   function update(dt, ctx) {
     gameTime += dt;
     lastPlayerPos = { x: ctx.playerPos.x, z: ctx.playerPos.z };
-
-    // Delayed pedestrian-witness reports fire here.
     for (let i = pendingReports.length - 1; i >= 0; i--) {
       const r = pendingReports[i];
       if (gameTime >= r.time) {
@@ -1062,8 +911,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
         dispatchTo(r.x, r.z);
       }
     }
-
-    // Pedestrians: distance-based update rate (far walkers tick less often).
     const pedPositions = [];
     for (const p of pedestrians) {
       const d = Math.hypot(p.pos.x - ctx.playerPos.x, p.pos.z - ctx.playerPos.z);
@@ -1071,11 +918,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       p.update(dt, { colliders, vehicles: ctx.vehicles });
       pedPositions.push({ x: p.pos.x, z: p.pos.z });
     }
-    // Foot police also count as obstacles for traffic braking.
     for (const o of footPolice) pedPositions.push({ x: o.pos.x, z: o.pos.z });
-
-    // Pedestrian-vehicle collisions: the driven car hitting a walker is a
-    // crime; a traffic/police car hitting one is an accident (no crime).
     for (const p of pedestrians) {
       if (p.state === 'down') continue;
       for (const v of ctx.vehicles) {
@@ -1084,15 +927,13 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
           p.knockDown(v.pos.x, v.pos.z);
           triggerDanger(p.pos.x, p.pos.z, 25);
           if (v === ctx.drivenCar) {
-            v.speed *= 0.7; // impact slows the car
+            v.speed *= 0.7;
             reportCrime('pedHit', p.pos.x, p.pos.z, {});
           }
           break;
         }
       }
     }
-
-    // Dangerous driving near a walker: they flee (no crime by itself).
     if (ctx.drivenCar && Math.abs(ctx.drivenCar.speed) > 12) {
       for (const p of pedestrians) {
         if (p.state === 'down' || p.state === 'flee') continue;
@@ -1100,10 +941,8 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
         if (d < 8) p.fleeFromPoint(ctx.drivenCar.pos.x, ctx.drivenCar.pos.z, 4);
       }
     }
-
-    // Police line-of-sight checks (staggered: each unit checks every 0.5 s).
     anyLos = false;
-    const runSpeed = 5.5 + level * 0.5; // foot pursuit quickens with level
+    const runSpeed = 5.5 + level * 0.5;
     const footCtx = {
       colliders,
       vehicles: ctx.vehicles,
@@ -1135,15 +974,11 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
         }
       }
     }
-
-    // Active-set recompute (coordination per wanted level).
     recomputeTimer -= dt;
     if (recomputeTimer <= 0) {
       recomputeTimer = ACTIVE_RECOMPUTE;
       if (level > 0) recomputeActive();
     }
-
-    // Move the units.
     for (const o of footPolice) o.update(dt, footCtx);
     for (const u of carUnits) {
       updatePoliceCar(u, dt, {
@@ -1153,8 +988,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
         pedPositions,
       });
     }
-
-    // Wanted status + heat decay (only while unseen).
     let newStatus = '';
     if (level > 0) {
       if (anyLos) {
@@ -1162,7 +995,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       } else {
         const searching = units.some((u) => u.state === 'search' || u.state === 'investigate');
         newStatus = searching ? 'SEARCH' : 'HIDDEN';
-        // Decay heat while hidden; faster inside a hiding zone.
         const zone = inHidingZone(ctx.playerPos.x, ctx.playerPos.z);
         const rate = zone ? HEAT_DECAY_HIDING : HEAT_DECAY;
         const oldLevel = level;
@@ -1189,12 +1021,9 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       prevStatus = newStatus;
     }
     status = newStatus;
-
-    // Siren: only while a pursuit or search is active (never on patrol).
     const sirenOn = level > 0 && (status === 'PURSUIT' || status === 'SEARCH');
     audio.setSiren(sirenOn, level / 5);
   }
-
   function reset() {
     for (const p of pedestrians) p.reset();
     for (const o of footPolice) o.reset();
@@ -1233,25 +1062,20 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     pendingReports.length = 0;
     audio.setSiren(false, 0);
   }
-
   function wantedInfo() {
     return { level, heat, status };
   }
-
   function minimapInfo() {
     return {
       peds: pedestrians.map((p) => ({ x: p.pos.x, z: p.pos.z })),
       police: units.map((u) => ({ x: u.pos.x, z: u.pos.z, car: u.kind === 'car' })),
     };
   }
-
   function pedPositions() {
     const out = pedestrians.map((p) => ({ x: p.pos.x, z: p.pos.z }));
     for (const o of footPolice) out.push({ x: o.pos.x, z: o.pos.z });
     return out;
   }
-
-  // ---- debug hooks (read-only state + test-only setters) ----
   const debug = {
     get pedestrians() {
       return pedestrians.map((p, i) => ({
@@ -1277,15 +1101,9 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     get counts() {
       return { peds: pedestrians.length, footPolice: footPolice.length, policeCars: carUnits.length };
     },
-    // Test-only: report a crime at the player's current position through
-    // the real witness/detection pipeline (the act is simulated; the
-    // detection — witness range, line of sight, dedup — is real).
     debugCrime(type, eventId) {
       return reportCrime(type, lastPlayerPos.x, lastPlayerPos.z, { eventId });
     },
-    // Test-only: set wanted heat directly (level derives from it). The
-    // police respond to the player's current position, as after a real
-    // crime (applyHeat sets lastKnown to the crime scene).
     debugSetHeat(n) {
       heat = Math.max(0, Math.min(100, n));
       level = levelForHeat(heat);
@@ -1294,7 +1112,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       lastSeenTime = gameTime;
       return { level, heat };
     },
-    // Test-only: hold a pedestrian in place (idle) at a spot.
     debugPlacePed(i, x, z) {
       const p = pedestrians[i];
       if (!p) return false;
@@ -1304,9 +1121,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       p.syncPose();
       return true;
     },
-    // Test-only: hold a police unit in place at a spot. The hold is short
-    // (5 game-s) — just enough to set up a test scene — so the unit can
-    // move and pursue normally once the test starts.
     debugPlacePolice(i, x, z) {
       const u = units[i];
       if (!u) return false;
@@ -1322,38 +1136,29 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       }
       return true;
     },
-    // Test-only: line-of-sight check between two world points.
     debugLOS(x0, z0, x1, z1) {
       return losClear(x0, z0, x1, z1);
     },
-    // Test-only: is a world point inside a tall collider (a building)?
-    // Used to verify pedestrians never spawn inside a building.
     debugInBuilding(x, z) {
       for (const c of tallColliders) {
         if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ) return true;
       }
       return false;
     },
-    // Test-only: reset all NPCs, police and wanted state to the start.
     debugReset() {
       reset();
       return true;
     },
-    // Test-only: trigger a danger event (pedestrians flee).
     debugTriggerDanger(x, z, radius) {
       triggerDanger(x, z, radius || 25);
       return true;
     },
-    // Test-only: hide/show all walker meshes (performance diagnostic —
-    // measures the draw-call cost of the instanced humanoids).
     debugSetWalkersVisible(v) {
       for (const m of [renderer.torso, renderer.head, renderer.hair, renderer.arm, renderer.leg, renderer.cap, renderer.badge]) {
         m.visible = v;
       }
       return v;
     },
-    // Test-only: hold a traffic car in place (so the player can walk up
-    // and steal it for the real theft test).
     debugHoldTraffic(i, seconds) {
       const car = vehicles.traffic[i];
       if (!car) return false;
@@ -1362,7 +1167,6 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       return true;
     },
   };
-
   return {
     pedestrians,
     footPolice,
