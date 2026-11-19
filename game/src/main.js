@@ -1,134 +1,145 @@
-// Boot and the one loop: input is read every frame, the world advances in fixed 1/60 s steps
-// (several in a slow frame, none in a fast one), and the renderer paints what is there. The game
-// moves between four screens: title, play, paused and game over.
-//
-// ?seed=N fixes the falling pattern. ?shot=start|play|end (with &seed=N) stages that scene
-// instead of running the loop, paints it twice and sets window.__shotReady for a screenshot.
-import { BEST_KEY, LIVES, STEP } from './config.js';
-import { createRandom } from './random.js';
-import { createWorld, EVENT_HIT, EVENT_OVER } from './world.js';
-import { ACTION_CONFIRM, ACTION_PAUSE, createInput } from './input.js';
-import { createRenderer, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE } from './render.js';
-import { stageShot } from './shots.js';
+// CITY OF EMBERS — bootstrap + game loop (original, Phase 1).
+// Third-person 3D night city block. States: menu -> playing <-> paused.
+// Rendering: Three.js r187 (local vendor), WebGL, shadows, fog.
 
-/** The longest frame the loop catches up on; a longer stall (a hidden tab) is dropped, not replayed. */
-const MAX_FRAME = 0.25;
-
-const params = new URLSearchParams(window.location.search);
-const shot = params.get('shot');
-const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
-const seed = Number.isInteger(seedParam) ? seedParam : Math.floor(Math.random() * 4294967296);
+import * as THREE from 'three';
+import { buildWorld } from './world.js';
+import { createPlayer } from './player.js';
+import { createCamera } from './camera.js';
+import { createInput } from './input.js';
+import { createHud } from './hud.js';
 
 const canvas = document.getElementById('game');
-const status = document.getElementById('status');
-const world = createWorld(createRandom(seed));
-const renderer = createRenderer(canvas);
+// ?lowfx=1 disables antialias + shadows: a test-only switch so the
+// Playwright acceptance runs stay fast under headless SwiftShader (a
+// software rasterizer). The shipped game always runs with full effects.
+const lowFx = new URLSearchParams(window.location.search).get('lowfx') === '1';
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !lowFx });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = !lowFx;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
 
-function readBest() {
-  try {
-    return Number.parseInt(window.localStorage.getItem(BEST_KEY) ?? '0', 10) || 0;
-  } catch {
-    return 0;
-  }
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
+
+const world = buildWorld(scene, { lowFx });
+const player = createPlayer(scene, world.colliders);
+const thirdPerson = createCamera(camera, world.colliders);
+const input = createInput(canvas);
+const hud = createHud(world);
+
+let state = 'menu'; // menu | playing | paused
+let lastTime = performance.now();
+let fps = 60;
+let fpsAccum = 0;
+let fpsFrames = 0;
+let fpsTimer = 0;
+let frames = 0; // total rendered frames (wall-clock rate probe)
+
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+function startGame() {
+  player.reset();
+  thirdPerson.reset();
+  state = 'playing';
+  hud.showGame();
+  hud.showToast('Selamat datang di Ember Bay');
 }
 
-function saveBest(value) {
-  try {
-    window.localStorage.setItem(BEST_KEY, String(value));
-  } catch {
-    // Storage can be off (private windows): the best score then lasts this visit only.
-  }
+function pauseGame() {
+  if (state !== 'playing') return;
+  state = 'paused';
+  hud.showPause();
+  if (document.pointerLockElement) document.exitPointerLock();
 }
 
-function runShot(name) {
-  const scene = stageShot(name, world);
-  let painted = 0;
-  function paint() {
-    renderer.draw(world.state, scene.screen, scene.best);
-    painted += 1;
-    if (painted < 2) requestAnimationFrame(paint);
-    else window.__shotReady = true;
-  }
-  requestAnimationFrame(paint);
+function resumeGame() {
+  if (state !== 'paused') return;
+  state = 'playing';
+  hud.hidePause();
 }
 
-function runGame() {
-  const input = createInput(canvas);
-  let screen = SCREEN_TITLE;
-  let best = readBest();
-  let accumulator = 0;
-  let last = performance.now();
+function restartGame() {
+  player.reset();
+  thirdPerson.reset();
+  state = 'playing';
+  hud.showGame();
+  hud.showToast('Malam baru di Ember Bay');
+}
 
-  // Screen readers (and anyone watching the page's text) hear the screen changes and each hit.
-  function announce(message) {
-    status.textContent = message;
-  }
+hud.el.startBtn.addEventListener('click', startGame);
+hud.el.resumeBtn.addEventListener('click', resumeGame);
+hud.el.restartBtn.addEventListener('click', restartGame);
 
-  function startGame() {
-    world.reset();
-    accumulator = 0;
-    screen = SCREEN_PLAY;
-    announce(`Playing. ${LIVES} lives.`);
-  }
+// Support ?shot=start|play for the automated screenshot runs: the shot
+// harness starts the game directly so screenshots show gameplay, not menu.
+// (Checked here, AFTER showStart, so the auto-start is not overridden.)
+const shotParam = new URLSearchParams(window.location.search).get('shot');
 
-  function endGame() {
-    screen = SCREEN_OVER;
-    if (world.state.score > best) {
-      best = world.state.score;
-      saveBest(best);
-    }
-    announce(`Game over. Score ${world.state.score}. Best ${best}.`);
-  }
-
-  function handleActions() {
-    const actions = input.takeActions();
-    if (actions & ACTION_CONFIRM && (screen === SCREEN_TITLE || screen === SCREEN_OVER)) startGame();
-    else if (actions & ACTION_PAUSE && screen === SCREEN_PLAY) {
-      screen = SCREEN_PAUSED;
-      announce('Paused.');
-    } else if (actions & (ACTION_PAUSE | ACTION_CONFIRM) && screen === SCREEN_PAUSED) {
-      screen = SCREEN_PLAY;
-      announce('Playing.');
-    }
-  }
-
-  function step() {
-    if (screen === SCREEN_TITLE) {
-      world.step(STEP, 0, true);
-      return;
-    }
-    const events = world.step(STEP, input.direction(), false);
-    if (events & EVENT_OVER) endGame();
-    else if (events & EVENT_HIT) announce(world.state.lives === 1 ? 'Hit. 1 life left.' : `Hit. ${world.state.lives} lives left.`);
-  }
-
-  function frame(now) {
-    requestAnimationFrame(frame);
-    accumulator += Math.min((now - last) / 1000, MAX_FRAME);
-    last = now;
-    handleActions();
-    if (screen === SCREEN_TITLE || screen === SCREEN_PLAY) {
-      while (accumulator >= STEP && (screen === SCREEN_TITLE || screen === SCREEN_PLAY)) {
-        step();
-        accumulator -= STEP;
-      }
-    } else {
-      accumulator = 0;
-    }
-    renderer.draw(world.state, screen, best);
-  }
-
-  // Leaving the tab pauses a running game rather than letting blocks fall unseen.
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && screen === SCREEN_PLAY) {
-      screen = SCREEN_PAUSED;
-      announce('Paused.');
-    }
-  });
-
-  announce('Block Dodger. Press Space or click to start.');
+function frame(now) {
   requestAnimationFrame(frame);
+  frames += 1;
+  const rawDt = (now - lastTime) / 1000; // wall-clock dt (unclamped)
+  const dt = Math.min(0.05, rawDt); // game dt, clamped so low FPS = slow-mo, not jumps
+  lastTime = now;
+
+  // FPS from REAL wall-clock dt, so the meter is honest even when the
+  // renderer is slow (a clamped-dt meter would read ~20 at 1 real FPS).
+  fpsAccum += 1 / Math.max(rawDt, 1e-4);
+  fpsFrames += 1;
+  fpsTimer += rawDt;
+  if (fpsTimer >= 0.5) {
+    fps = fpsAccum / Math.max(1, fpsFrames);
+    fpsAccum = 0;
+    fpsFrames = 0;
+    fpsTimer = 0;
+  }
+
+  if (input.consumePause()) {
+    if (state === 'playing') pauseGame();
+    else if (state === 'paused') resumeGame();
+  }
+
+  if (state === 'playing') {
+    const mouse = input.consumeMouse();
+    if (mouse.dx !== 0 || mouse.dy !== 0) thirdPerson.orbit(mouse.dx, mouse.dy);
+    const mv = input.moveVector();
+    player.update(dt, mv, thirdPerson.yaw);
+    thirdPerson.update(dt, player.pos);
+    world.update(dt, now / 1000);
+    hud.update(dt, fps, player);
+  } else if (state === 'menu') {
+    // Slow cinematic orbit behind the spawn while on the menu.
+    thirdPerson.yaw += dt * 0.05;
+    thirdPerson.update(dt, player.pos);
+  }
+  // paused: freeze the world, keep rendering the last frame.
+
+  renderer.render(scene, camera);
 }
 
-if (shot) runShot(shot);
-else runGame();
+// Debug hooks for the Playwright acceptance tests (read-only state).
+window.__embers = {
+  get state() { return state; },
+  get playerPos() { return { x: player.pos.x, y: player.pos.y, z: player.pos.z }; },
+  get playerSpeed() { return player.speed; },
+  get fps() { return fps; },
+  get frames() { return frames; },
+  get drawCalls() { return renderer.info.render.calls; },
+  get triangles() { return renderer.info.render.triangles; },
+  get camYaw() { return thirdPerson.yaw; },
+  start: startGame,
+};
+
+hud.showStart();
+if (shotParam === 'play') startGame();
+requestAnimationFrame(frame);

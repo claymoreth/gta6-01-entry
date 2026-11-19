@@ -1,0 +1,47 @@
+/* CITY OF EMBERS — HUD + overlay styling (original, Phase 1). */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a18; }
+body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: #eef0ff; }
+#app { position: fixed; inset: 0; }
+#game { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#game:active { cursor: grabbing; }
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud { position: absolute; inset: 0; pointer-events: none; }
+#district { position: absolute; top: 16px; left: 18px; text-shadow: 0 2px 6px rgba(0,0,0,.85); }
+#district-name { font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #ffd166; }
+#street-name { font-size: 13px; letter-spacing: 1px; color: #c9cfff; margin-top: 2px; }
+#mission { font-size: 13px; margin-top: 8px; color: #ffffff; background: rgba(10,10,40,.55); border-left: 3px solid #ff5d8f; padding: 6px 10px; border-radius: 0 6px 6px 0; max-width: 340px; }
+#stats { position: absolute; top: 16px; right: 18px; text-align: right; font-size: 12px; color: #b9c0ff; text-shadow: 0 1px 4px #000; line-height: 1.6; }
+#minimap-wrap { position: absolute; left: 18px; bottom: 18px; }
+#minimap { display: block; border: 2px solid rgba(255,209,102,.65); border-radius: 8px; background: #0d0d24; box-shadow: 0 4px 18px rgba(0,0,0,.6); }
+#minimap-label { text-align: center; font-size: 11px; letter-spacing: 3px; color: #ffd166; margin-top: 4px; text-shadow: 0 1px 4px #000; }
+#vitals { position: absolute; right: 18px; bottom: 18px; width: 260px; text-shadow: 0 1px 4px #000; }
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bar-label { font-size: 11px; letter-spacing: 2px; width: 52px; color: #c9cfff; }
+.bar { flex: 1; height: 12px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); border-radius: 6px; overflow: hidden; }
+.fill { height: 100%; border-radius: 6px; }
+.fill.health { width: 100%; background: linear-gradient(90deg, #37d67a, #7ef0a8); }
+.fill.armour { width: 50%; background: linear-gradient(90deg, #4aa8ff, #8ec9ff); }
+.bar-num { font-size: 12px; width: 28px; text-align: right; }
+.vitals-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-top: 4px; }
+#money { color: #7ef0a8; }
+#wanted { color: #8a8fa8; letter-spacing: 2px; font-size: 13px; }
+#crosshair { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,.85); box-shadow: 0 0 6px rgba(0,0,0,.8); }
+#hint { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); font-size: 12px; color: #dfe3ff; background: rgba(10,10,40,.5); padding: 6px 12px; border-radius: 20px; white-space: nowrap; }
+#toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); font-size: 17px; font-weight: 700; color: #ffd166; background: rgba(10,10,40,.7); padding: 10px 18px; border-radius: 8px; border: 1px solid rgba(255,209,102,.5); }
+
+/* ---------- Overlays ---------- */
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(24,16,64,.55) 0%, rgba(5,5,20,.88) 100%); }
+.panel { text-align: center; max-width: 520px; padding: 36px 44px; background: rgba(12,12,36,.72); border: 1px solid rgba(255,209,102,.35); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.7); }
+.panel h1 { font-size: 56px; line-height: .95; letter-spacing: 6px; color: #ffd166; text-shadow: 0 0 24px rgba(255,150,60,.55), 0 4px 0 rgba(0,0,0,.4); }
+.panel h2 { font-size: 40px; letter-spacing: 6px; color: #ffd166; }
+.tagline { margin: 16px 0 22px; font-size: 15px; line-height: 1.6; color: #dfe3ff; }
+.btn { pointer-events: auto; display: inline-block; font-size: 18px; font-weight: 800; letter-spacing: 2px; color: #1a1030; background: linear-gradient(180deg, #ffd166, #ff9f43); border: none; border-radius: 10px; padding: 14px 34px; cursor: pointer; margin: 6px; box-shadow: 0 6px 0 #b96a00, 0 10px 24px rgba(0,0,0,.5); }
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #b96a00; }
+.btn.ghost { background: transparent; color: #dfe3ff; border: 2px solid rgba(255,255,255,.4); box-shadow: none; }
+.controls { text-align: left; margin: 18px auto 6px; display: inline-block; font-size: 13px; line-height: 2; color: #c9cfff; }
+.controls b { color: #ffd166; }
+.fine { margin-top: 14px; font-size: 11px; color: #8a8fa8; }
