@@ -1,5 +1,7 @@
-// CITY OF EMBERS — bootstrap + game loop (original, Phase 1).
-// Third-person 3D night city block. States: menu -> playing <-> paused.
+// CITY OF EMBERS — bootstrap + game loop (original, Phase 2).
+// Third-person 3D night city: three connected districts (Downtown,
+// Residential, Waterfront) with a GPS waypoint system and a 3-objective
+// exploration mission. States: menu -> playing <-> paused.
 // Rendering: Three.js r187 (local vendor), WebGL, shadows, fog.
 
 import * as THREE from 'three';
@@ -30,7 +32,128 @@ const world = buildWorld(scene, { lowFx });
 const player = createPlayer(scene, world.colliders);
 const thirdPerson = createCamera(camera, world.colliders);
 const input = createInput(canvas);
-const hud = createHud(world);
+
+// ---- GPS waypoint + mission state (Phase 2) ----
+// The mission is a 3-stop exploration tour of the city. The waypoint
+// always points at the current objective; clicking the minimap sets a
+// custom waypoint instead until it is reached, then the mission resumes.
+const MISSION_STOPS = [
+  { name: 'Taman Melati', x: -140, z: 37 },
+  { name: 'Mercusuar Ember', x: 168, z: 0 },
+  { name: 'Plaza Merdeka', x: 0, z: 0 },
+];
+const ARRIVE_RADIUS = 5; // metres
+let missionIndex = 0; // next stop to visit
+let missionDone = false;
+let customWaypoint = null; // { x, z, name } set by minimap click
+let waypoint = null; // active waypoint { x, z, name, custom: bool }
+let beacon = null; // 3D beacon mesh marking the waypoint
+
+function missionText() {
+  if (missionDone) return { title: 'CITY OF EMBERS — Kota dijelajahi!', progress: '3/3 tujuan' };
+  const stop = MISSION_STOPS[missionIndex];
+  return {
+    title: `CITY OF EMBERS — Pergi ke ${stop.name}`,
+    progress: `${missionIndex}/3 tujuan`,
+  };
+}
+
+function refreshWaypoint() {
+  if (customWaypoint) {
+    waypoint = { ...customWaypoint, custom: true };
+  } else if (!missionDone) {
+    const stop = MISSION_STOPS[missionIndex];
+    waypoint = { x: stop.x, z: stop.z, name: stop.name, custom: false };
+  } else {
+    waypoint = null;
+  }
+  updateBeacon();
+  hud.setMission(missionText());
+}
+
+function setCustomWaypoint(x, z) {
+  customWaypoint = { x, z, name: 'Tujuan (minimap)' };
+  refreshWaypoint();
+  hud.showToast('Tujuan ditandai di GPS');
+}
+
+const hud = createHud(world, { onMinimapClick: setCustomWaypoint });
+
+// 3D beacon: a glowing pillar + a floating diamond above the waypoint.
+function makeBeacon() {
+  const g = new THREE.Group();
+  const pillar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 30, 10, 1, true),
+    new THREE.MeshBasicMaterial({
+      color: 0xffd166, transparent: true, opacity: 0.25,
+      side: THREE.DoubleSide, depthWrite: false,
+    }),
+  );
+  pillar.position.y = 15;
+  g.add(pillar);
+  const diamond = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.9),
+    new THREE.MeshBasicMaterial({ color: 0xffd166 }),
+  );
+  diamond.position.y = 4.2;
+  diamond.name = 'beacon-diamond';
+  g.add(diamond);
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(1.6, 2.2, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffd166, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }),
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.06;
+  g.add(ring);
+  g.visible = false;
+  scene.add(g);
+  return g;
+}
+beacon = makeBeacon();
+
+function updateBeacon() {
+  if (!waypoint) {
+    beacon.visible = false;
+    return;
+  }
+  beacon.visible = true;
+  beacon.position.set(waypoint.x, 0, waypoint.z);
+}
+
+function checkArrival() {
+  if (!waypoint) return;
+  const dx = waypoint.x - player.pos.x;
+  const dz = waypoint.z - player.pos.z;
+  const d = Math.hypot(dx, dz);
+  if (d > ARRIVE_RADIUS) return;
+  if (waypoint.custom) {
+    customWaypoint = null;
+    hud.showToast('Tujuan tercapai');
+    refreshWaypoint();
+    return;
+  }
+  // Mission stop reached.
+  missionIndex += 1;
+  if (missionIndex >= MISSION_STOPS.length) {
+    missionDone = true;
+    hud.showToast('Kota dijelajahi! Semua tujuan tercapai');
+  } else {
+    hud.showToast(`Tujuan tercapai — lanjut ke ${MISSION_STOPS[missionIndex].name}`);
+  }
+  refreshWaypoint();
+}
+
+function waypointInfo() {
+  if (!waypoint) return { waypoint: null, distance: 0, bearing: 0, camYaw: thirdPerson.yaw };
+  const dx = waypoint.x - player.pos.x;
+  const dz = waypoint.z - player.pos.z;
+  return {
+    waypoint,
+    distance: Math.hypot(dx, dz),
+    bearing: Math.atan2(dx, dz),
+    camYaw: thirdPerson.yaw,
+  };
+}
 
 let state = 'menu'; // menu | playing | paused
 let lastTime = performance.now();
@@ -50,6 +173,10 @@ window.addEventListener('resize', resize);
 function startGame() {
   player.reset();
   thirdPerson.reset();
+  missionIndex = 0;
+  missionDone = false;
+  customWaypoint = null;
+  refreshWaypoint();
   state = 'playing';
   hud.showGame();
   hud.showToast('Selamat datang di Ember Bay');
@@ -71,6 +198,10 @@ function resumeGame() {
 function restartGame() {
   player.reset();
   thirdPerson.reset();
+  missionIndex = 0;
+  missionDone = false;
+  customWaypoint = null;
+  refreshWaypoint();
   state = 'playing';
   hud.showGame();
   hud.showToast('Malam baru di Ember Bay');
@@ -80,8 +211,9 @@ hud.el.startBtn.addEventListener('click', startGame);
 hud.el.resumeBtn.addEventListener('click', resumeGame);
 hud.el.restartBtn.addEventListener('click', restartGame);
 
-// Support ?shot=start|play for the automated screenshot runs: the shot
-// harness starts the game directly so screenshots show gameplay, not menu.
+// Support ?shot=start|play|district for the automated screenshot runs:
+// the shot harness starts the game directly so screenshots show gameplay,
+// not menu. ?shot=district teleports to the waterfront for district shots.
 // (Checked here, AFTER showStart, so the auto-start is not overridden.)
 const shotParam = new URLSearchParams(window.location.search).get('shot');
 
@@ -116,7 +248,16 @@ function frame(now) {
     player.update(dt, mv, thirdPerson.yaw);
     thirdPerson.update(dt, player.pos);
     world.update(dt, now / 1000);
-    hud.update(dt, fps, player);
+    // Beacon diamond bobs + spins above the waypoint.
+    if (beacon.visible) {
+      const diamond = beacon.getObjectByName('beacon-diamond');
+      if (diamond) {
+        diamond.rotation.y += dt * 1.5;
+        diamond.position.y = 4.2 + Math.sin(now / 450) * 0.35;
+      }
+    }
+    checkArrival();
+    hud.update(dt, fps, player, waypointInfo());
   } else if (state === 'menu') {
     // Slow cinematic orbit behind the spawn while on the menu.
     thirdPerson.yaw += dt * 0.05;
@@ -127,7 +268,8 @@ function frame(now) {
   renderer.render(scene, camera);
 }
 
-// Debug hooks for the Playwright acceptance tests (read-only state).
+// Debug hooks for the Playwright acceptance tests (read-only state +
+// test-only teleport / waypoint setters).
 window.__embers = {
   get state() { return state; },
   get playerPos() { return { x: player.pos.x, y: player.pos.y, z: player.pos.z }; },
@@ -137,9 +279,48 @@ window.__embers = {
   get drawCalls() { return renderer.info.render.calls; },
   get triangles() { return renderer.info.render.triangles; },
   get camYaw() { return thirdPerson.yaw; },
+  get district() {
+    const d = world.districtAt(player.pos.x, player.pos.z);
+    return { district: d.district, street: d.street };
+  },
+  get waypoint() { return waypoint ? { ...waypoint } : null; },
+  get waypointDistance() { return waypointInfo().distance; },
+  get mission() {
+    return { index: missionIndex, done: missionDone, text: missionText() };
+  },
+  get pois() { return world.pois.map((p) => ({ ...p })); },
+  get bounds() { return { ...world.bounds }; },
+  // Minimap pixel (canvas coords, 180x180) for a world point, so tests
+  // can click the minimap at an exact world location.
+  minimapPixel(x, z) { const [px, py] = hud.worldToMap(x, z); return { x: px, y: py }; },
   start: startGame,
+  // Test-only: move the player instantly (acceptance tests use it to
+  // position the player near a district boundary or a waypoint).
+  teleport(x, z) {
+    player.pos.set(x, 0, z);
+    player.vel.set(0, 0, 0);
+  },
+  // Test-only: set a custom waypoint, mirroring a minimap click.
+  setWaypoint(x, z, name) {
+    setCustomWaypoint(x, z);
+    if (name && waypoint) waypoint.name = name;
+  },
 };
 
 hud.showStart();
+refreshWaypoint();
 if (shotParam === 'play') startGame();
+if (shotParam === 'district') {
+  startGame();
+  // Waterfront vantage: on the EW road just before the pier, facing east
+  // down the pier toward the lighthouse, so the shot shows the pier, the
+  // sea, the lighthouse beacon and the waterfront skyline.
+  // Camera yaw -PI/2 puts the camera WEST of the player, looking east
+  // (behind the player, who faces +x / east).
+  player.pos.set(132, 0, 0);
+  player.facing = Math.PI / 2;
+  thirdPerson.yaw = -Math.PI / 2;
+  setCustomWaypoint(168, 0);
+  if (waypoint) waypoint.name = 'Mercusuar Ember';
+}
 requestAnimationFrame(frame);

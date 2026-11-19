@@ -1,15 +1,22 @@
-// CITY OF EMBERS — HUD + minimap + overlays (original, Phase 1).
+// CITY OF EMBERS — HUD + minimap + GPS + overlays (original, Phase 2).
 // DOM-based HUD over the WebGL canvas; the minimap is a 2D canvas drawn
-// from the same world layout the 3D scene uses (roads, buildings, player).
+// from the same world layout the 3D scene uses (roads, buildings, sea,
+// POIs, player, waypoint). Clicking the minimap sets a GPS waypoint.
 
-import { WORLD_HALF } from './world.js';
+import { WORLD_BOUNDS } from './world.js';
 
-export function createHud(world) {
+export function createHud(world, callbacks) {
   const el = {
     hud: document.getElementById('hud'),
     districtName: document.getElementById('district-name'),
     streetName: document.getElementById('street-name'),
     mission: document.getElementById('mission'),
+    missionProgress: document.getElementById('mission-progress'),
+    gps: document.getElementById('gps'),
+    gpsDist: document.getElementById('gps-dist'),
+    gpsName: document.getElementById('gps-name'),
+    compass: document.getElementById('compass'),
+    compassArrow: document.getElementById('compass-arrow'),
     pos: document.getElementById('pos'),
     minimap: document.getElementById('minimap'),
     healthFill: document.getElementById('health-fill'),
@@ -17,6 +24,8 @@ export function createHud(world) {
     healthNum: document.getElementById('health-num'),
     armourNum: document.getElementById('armour-num'),
     money: document.getElementById('money'),
+    weapon: document.getElementById('weapon'),
+    ammo: document.getElementById('ammo'),
     wanted: document.getElementById('wanted'),
     toast: document.getElementById('toast'),
     startScreen: document.getElementById('start-screen'),
@@ -27,10 +36,26 @@ export function createHud(world) {
   };
   const mctx = el.minimap.getContext('2d');
   const SIZE = 180;
-  const scale = SIZE / (WORLD_HALF * 2 + 8);
+  const BW = WORLD_BOUNDS;
+  const mapW = BW.maxX - BW.minX + 8;
+  const mapH = BW.maxZ - BW.minZ + 8;
+  const scale = SIZE / mapW;
+  const yOff = (SIZE - mapH * scale) / 2;
+  const toMap = (x, z) => [(x - BW.minX + 4) * scale, (z - BW.minZ + 4) * scale + yOff];
+  const toWorld = (px, py) => [(px / scale) + BW.minX - 4, ((py - yOff) / scale) + BW.minZ - 4];
 
   // Building footprints for the minimap, derived from the colliders.
-  const buildings = world.colliders.filter((c) => c.name === 'building');
+  const drawable = world.colliders.filter((c) =>
+    ['building', 'house', 'warehouse', 'container', 'crane', 'office', 'lighthouse'].includes(c.name));
+  const fillFor = {
+    building: '#5a5a8a',
+    house: '#7a6a55',
+    warehouse: '#9a6a35',
+    container: '#3a7a8a',
+    crane: '#8a6a2f',
+    office: '#6a6a7a',
+    lighthouse: '#e8e4da',
+  };
 
   let toastTimer = 0;
   function showToast(text, ms) {
@@ -40,30 +65,91 @@ export function createHud(world) {
     toastTimer = setTimeout(() => el.toast.classList.add('hidden'), ms ?? 2600);
   }
 
-  function drawMinimap(player) {
+  // Minimap click -> GPS waypoint (world coords, clamped to the city).
+  el.minimap.style.pointerEvents = 'auto';
+  el.minimap.style.cursor = 'crosshair';
+  el.minimap.addEventListener('click', (e) => {
+    const rect = el.minimap.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (SIZE / rect.width);
+    const py = (e.clientY - rect.top) * (SIZE / rect.height);
+    const [wx, wz] = toWorld(px, py);
+    const cx = Math.max(BW.minX + 2, Math.min(BW.maxX - 2, wx));
+    const cz = Math.max(BW.minZ + 2, Math.min(BW.maxZ - 2, wz));
+    if (callbacks && callbacks.onMinimapClick) callbacks.onMinimapClick(cx, cz);
+  });
+
+  let pulseT = 0;
+  function drawMinimap(player, waypoint) {
     const g = mctx;
     g.clearRect(0, 0, SIZE, SIZE);
-    // background
     g.fillStyle = '#0d0d24';
     g.fillRect(0, 0, SIZE, SIZE);
-    const toMap = (x, z) => [(x + WORLD_HALF + 4) * scale, (z + WORLD_HALF + 4) * scale];
-    // roads
+    // sea strip on the east edge
+    g.fillStyle = '#0a2a4a';
+    const [seaX] = toMap(156, 0);
+    g.fillRect(seaX, yOff, SIZE - seaX, mapH * scale);
+    // roads: EW spine + 3 NS roads
     g.fillStyle = '#2c2c3e';
-    const [rx] = toMap(-5, 0);
-    const [, rz] = toMap(0, -5);
-    g.fillRect(0, rz, SIZE, 10 * scale);
-    g.fillRect(rx, 0, 10 * scale, SIZE);
+    const [, rz0] = toMap(0, -5);
+    g.fillRect(0, rz0, SIZE, 10 * scale);
+    for (const rx of [0, -115, 115]) {
+      const [mx] = toMap(rx - 5, 0);
+      const w = (rx === 115 ? 12 : rx === -115 ? 8 : 10) * scale;
+      g.fillRect(mx, yOff, w, mapH * scale);
+    }
+    // park lawn
+    g.fillStyle = '#1d4d28';
+    const [parkX, parkY] = toMap(-152, 22);
+    g.fillRect(parkX, parkY, 24 * scale, 30 * scale);
+    // pier
+    g.fillStyle = '#5a3d24';
+    const [pierX, pierY] = toMap(140, -4);
+    g.fillRect(pierX, pierY, 32 * scale, 8 * scale);
     // buildings
-    g.fillStyle = '#5a5a8a';
-    for (const b of buildings) {
+    for (const b of drawable) {
+      g.fillStyle = fillFor[b.name] || '#555';
       const [x, z] = toMap(b.minX, b.minZ);
       g.fillRect(x, z, (b.maxX - b.minX) * scale, (b.maxZ - b.minZ) * scale);
     }
-    // player arrow (rotates with facing). Map x = world x, map y = world z;
-    // world forward is (sin f, cos f), so the map angle is atan2(dx, -dz)
-    // because "up" on the map is -z (north).
+    // POI dots
+    for (const p of world.pois) {
+      const [x, z] = toMap(p.x, p.z);
+      g.fillStyle = p.color;
+      g.beginPath();
+      g.arc(x, z, p.kind === 'safehouse' ? 3.5 : 2.5, 0, Math.PI * 2);
+      g.fill();
+    }
+    // waypoint: line from player, then a pulsing diamond
+    if (waypoint) {
+      const [px, pz] = toMap(player.pos.x, player.pos.z);
+      const [wx, wz] = toMap(waypoint.x, waypoint.z);
+      g.strokeStyle = 'rgba(255,209,102,0.8)';
+      g.lineWidth = 1.5;
+      g.setLineDash([4, 3]);
+      g.beginPath();
+      g.moveTo(px, pz);
+      g.lineTo(wx, wz);
+      g.stroke();
+      g.setLineDash([]);
+      const pr = 4 + Math.sin(pulseT * 5) * 1.5;
+      g.fillStyle = '#ffd166';
+      g.beginPath();
+      g.moveTo(wx, wz - pr);
+      g.lineTo(wx + pr, wz);
+      g.lineTo(wx, wz + pr);
+      g.lineTo(wx - pr, wz);
+      g.closePath();
+      g.fill();
+      g.strokeStyle = '#1a1030';
+      g.lineWidth = 1;
+      g.stroke();
+    }
+    // player arrow (rotates with facing; map up is -z / north)
     const [px, pz] = toMap(player.pos.x, player.pos.z);
+    const mapAngle = Math.atan2(Math.sin(player.facing), -Math.cos(player.facing));
     g.save();
+    g.translate(px, pz);
+    g.rotate(mapAngle);
     g.fillStyle = '#ffd166';
     g.beginPath();
     g.moveTo(0, -7);
@@ -71,6 +157,9 @@ export function createHud(world) {
     g.lineTo(-5, 6);
     g.closePath();
     g.fill();
+    g.strokeStyle = '#1a1030';
+    g.lineWidth = 1;
+    g.stroke();
     g.restore();
     // north marker
     g.fillStyle = '#c9cfff';
@@ -79,7 +168,8 @@ export function createHud(world) {
   }
 
   let lastDistrict = '';
-  function update(dt, fps, player) {
+  function update(dt, fps, player, gps) {
+    pulseT += dt;
     const { district, street } = world.districtAt(player.pos.x, player.pos.z);
     if (district !== lastDistrict) {
       lastDistrict = district;
@@ -95,8 +185,30 @@ export function createHud(world) {
     el.armourFill.style.width = '50%';
     el.armourNum.textContent = '50';
     el.money.textContent = '$0';
+    el.weapon.textContent = 'Tangan Kosong';
+    el.ammo.textContent = '—';
     el.wanted.textContent = 'WANTED ☆☆☆☆☆';
-    drawMinimap(player);
+    // GPS readout + compass arrow toward the waypoint (relative to camera).
+    if (gps && gps.waypoint) {
+      el.gps.classList.remove('hidden');
+      el.gpsName.textContent = gps.waypoint.name || 'Tujuan';
+      el.gpsDist.textContent = `${Math.round(gps.distance)} m`;
+      el.compass.classList.remove('hidden');
+      // Camera looks along (-sin yaw, -cos yaw); bearing to waypoint is
+      // atan2(dx, dz) in world space. Arrow rotation = bearing - camBearing.
+      const camBearing = Math.atan2(-Math.sin(gps.camYaw), -Math.cos(gps.camYaw));
+      const rel = gps.bearing - camBearing;
+      el.compassArrow.style.transform = `rotate(${rel}rad)`;
+    } else {
+      el.gps.classList.add('hidden');
+      el.compass.classList.add('hidden');
+    }
+    drawMinimap(player, gps ? gps.waypoint : null);
+  }
+
+  function setMission(mission) {
+    el.mission.textContent = mission.title;
+    el.missionProgress.textContent = mission.progress;
   }
 
   function showStart() {
@@ -117,6 +229,7 @@ export function createHud(world) {
   }
 
   return {
-    el, showToast, update, showStart, showGame, showPause, hidePause,
+    el, showToast, update, setMission, showStart, showGame, showPause, hidePause,
+    worldToMap: toMap, mapToWorld: toWorld,
   };
 }

@@ -4,7 +4,7 @@
 
 import * as THREE from 'three';
 import { resolveCircle, clamp } from './collision.js';
-import { WORLD_HALF } from './world.js';
+import { WORLD_BOUNDS } from './world.js';
 
 const WALK_SPEED = 4.2; // m/s
 const SPRINT_SPEED = 7.6; // m/s
@@ -118,8 +118,8 @@ export function createPlayer(scene, colliders) {
 
     let nx = state.pos.x + state.vel.x * dt;
     let nz = state.pos.z + state.vel.z * dt;
-    nx = clamp(nx, -WORLD_HALF + 1, WORLD_HALF - 1);
-    nz = clamp(nz, -WORLD_HALF + 1, WORLD_HALF - 1);
+    nx = clamp(nx, WORLD_BOUNDS.minX + 1, WORLD_BOUNDS.maxX - 1);
+    nz = clamp(nz, WORLD_BOUNDS.minZ + 1, WORLD_BOUNDS.maxZ - 1);
     const solved = resolveCircle(nx, nz, RADIUS, 0, HEIGHT, colliders);
     state.pos.x = solved.x;
     state.pos.z = solved.z;
