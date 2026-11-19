@@ -16,6 +16,9 @@ export function createCamera(camera, colliders) {
     yaw: 0, // camera sits south of the player, looking north (-z) at spawn
     pitch: 0.22,
     distance: DIST,
+    // Driving mode pulls the camera further back and higher (set by main.js).
+    dist: DIST,
+    height: HEIGHT_OFFSET,
     target: new THREE.Vector3(),
     desired: new THREE.Vector3(),
   };
@@ -30,13 +33,23 @@ export function createCamera(camera, colliders) {
     state.yaw = 0;
     state.pitch = 0.22;
     state.distance = DIST;
+    state.dist = DIST;
+    state.height = HEIGHT_OFFSET;
+  };
+
+  // Phase 3: driving camera sits further back and higher than on foot.
+  state.setDistance = function setDistance(d) {
+    state.dist = d;
+  };
+  state.setHeight = function setHeight(h) {
+    state.height = h;
   };
 
   // Follow the player; dt-smoothed. Returns nothing; moves the camera.
   state.update = function update(dt, playerPos) {
     // Smooth target: lerp the look target toward the player's head.
     state.target.lerp(
-      new THREE.Vector3(playerPos.x, playerPos.y + HEIGHT_OFFSET, playerPos.z),
+      new THREE.Vector3(playerPos.x, playerPos.y + state.height, playerPos.z),
       Math.min(1, 14 * dt),
     );
     const cp = Math.cos(state.pitch);
@@ -45,9 +58,9 @@ export function createCamera(camera, colliders) {
     const oz = Math.cos(state.yaw) * cp;
     const oy = sp;
     state.desired.set(
-      state.target.x + ox * DIST,
-      state.target.y + oy * DIST,
-      state.target.z + oz * DIST,
+      state.target.x + ox * state.dist,
+      state.target.y + oy * state.dist,
+      state.target.z + oz * state.dist,
     );
     // Keep the camera above the ground and out of buildings.
     if (state.desired.y < 0.5) state.desired.y = 0.5;
@@ -56,7 +69,7 @@ export function createCamera(camera, colliders) {
       state.desired.x, state.desired.y, state.desired.z,
       colliders,
     );
-    const useDist = DIST * Math.max(0.25, t);
+    const useDist = state.dist * Math.max(0.25, t);
     camera.position.set(
       state.target.x + ox * useDist,
       Math.max(0.5, state.target.y + oy * useDist),

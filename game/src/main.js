@@ -10,6 +10,8 @@ import { createPlayer } from './player.js';
 import { createCamera } from './camera.js';
 import { createInput } from './input.js';
 import { createHud } from './hud.js';
+import { createVehicles } from './vehicles.js';
+import { createAudio } from './audio.js';
 
 const canvas = document.getElementById('game');
 // ?lowfx=1 disables antialias + shadows: a test-only switch so the
@@ -32,6 +34,9 @@ const world = buildWorld(scene, { lowFx });
 const player = createPlayer(scene, world.colliders);
 const thirdPerson = createCamera(camera, world.colliders);
 const input = createInput(canvas);
+// Phase 3: drivable cars + civilian traffic, and synthesized audio.
+const vehicles = createVehicles(scene, world);
+const audio = createAudio();
 
 // ---- GPS waypoint + mission state (Phase 2) ----
 // The mission is a 3-stop exploration tour of the city. The waypoint
@@ -155,6 +160,69 @@ function waypointInfo() {
   };
 }
 
+// ---- Driving state (Phase 3) ----
+let driving = false;
+let drivenCar = null;
+
+function enterVehicle(car) {
+  driving = true;
+  drivenCar = car;
+  vehicles.setDriven(car);
+  player.group.visible = false; // Raka sits inside the car
+  // Camera swings behind the car for the driving view.
+  thirdPerson.yaw = car.heading + Math.PI;
+  thirdPerson.setDistance(10.5);
+  thirdPerson.setHeight(2.8);
+  hud.setInteract(null);
+  hud.showToast(`${car.type.name} — W/S gas & rem · A/D setir · SPASI handbrake · E keluar`);
+}
+
+function exitVehicle() {
+  if (!drivenCar) return;
+  // Step out on the car's right side, clear of the body.
+  const rx = Math.cos(drivenCar.heading);
+  const rz = -Math.sin(drivenCar.heading);
+  player.pos.set(
+    drivenCar.pos.x + rx * 2.6,
+    0,
+    drivenCar.pos.z + rz * 2.6,
+  );
+  player.vel.set(0, 0, 0);
+  player.facing = drivenCar.heading;
+  player.group.visible = true;
+  driving = false;
+  drivenCar = null;
+  vehicles.setDriven(null);
+  thirdPerson.setDistance(6.0);
+  thirdPerson.setHeight(1.7);
+  hud.showToast('Keluar dari kendaraan');
+}
+
+function drivingControl() {
+  const mv = input.moveVector();
+  return {
+    throttle: mv.y, // W = +1 gas, S = -1 brake (moving) / reverse (stopped)
+    steer: mv.x, // D = +1 -> heading decreases -> turns right
+    handbrake: input.handbrake(),
+    boost: mv.sprint,
+  };
+}
+
+// HUD driving panel data; vehicles are minimap dots (x, z, drivable, driven).
+function driveHudInfo() {
+  const list = vehicles.all.map((v) => ({
+    x: v.pos.x, z: v.pos.z, drivable: v.drivable, driven: v === drivenCar,
+  }));
+  if (!driving || !drivenCar) return { driving: false, vehicles: list };
+  return {
+    driving: true,
+    speedKmh: drivenCar.speed * 3.6,
+    name: drivenCar.type.name,
+    damage: drivenCar.damage,
+    vehicles: list,
+  };
+}
+
 let state = 'menu'; // menu | playing | paused
 let lastTime = performance.now();
 let fps = 60;
@@ -172,7 +240,12 @@ window.addEventListener('resize', resize);
 
 function startGame() {
   player.reset();
+  player.group.visible = true;
   thirdPerson.reset();
+  vehicles.reset();
+  driving = false;
+  drivenCar = null;
+  audio.init(); // browsers require a user gesture for AudioContext
   missionIndex = 0;
   missionDone = false;
   customWaypoint = null;
@@ -197,7 +270,11 @@ function resumeGame() {
 
 function restartGame() {
   player.reset();
+  player.group.visible = true;
   thirdPerson.reset();
+  vehicles.reset();
+  driving = false;
+  drivenCar = null;
   missionIndex = 0;
   missionDone = false;
   customWaypoint = null;
@@ -244,8 +321,51 @@ function frame(now) {
   if (state === 'playing') {
     const mouse = input.consumeMouse();
     if (mouse.dx !== 0 || mouse.dy !== 0) thirdPerson.orbit(mouse.dx, mouse.dy);
-    const mv = input.moveVector();
-    player.update(dt, mv, thirdPerson.yaw);
+
+    // E: enter / exit the nearest drivable car (one-shot edge).
+    if (input.consumeInteract()) {
+      if (driving) {
+        exitVehicle();
+      } else {
+        const near = vehicles.nearestDrivable(player.pos.x, player.pos.z, 4.5);
+        if (near) enterVehicle(near.vehicle);
+      }
+    }
+
+    if (driving && drivenCar) {
+      // Driving: arcade car physics + traffic; the player rides the car.
+      const ctrl = drivingControl();
+      const result = vehicles.update(dt, ctrl, null);
+      for (const c of result.crashes) audio.crash(c);
+      audio.setEngine(Math.abs(drivenCar.speed) / drivenCar.type.topSpeed, true);
+      audio.setSkid(ctrl.handbrake && Math.abs(drivenCar.speed) > 4);
+      player.pos.copy(drivenCar.pos);
+      player.facing = drivenCar.heading;
+      player.speed = drivenCar.speed;
+      // Ease the camera behind the car (shortest angular path); the mouse
+      // can still orbit, but the view drifts back behind the car.
+      let dyaw = (drivenCar.heading + Math.PI) - thirdPerson.yaw;
+      while (dyaw > Math.PI) dyaw -= Math.PI * 2;
+      while (dyaw < -Math.PI) dyaw += Math.PI * 2;
+      thirdPerson.yaw += dyaw * Math.min(1, 1.5 * dt);
+      hud.setInteract(null);
+    } else {
+      // On foot: walk + traffic keeps moving; cars are solid to the player.
+      const mv = input.moveVector();
+      player.update(dt, mv, thirdPerson.yaw);
+      const result = vehicles.update(dt, null, { x: player.pos.x, z: player.pos.z });
+      for (const c of result.crashes) audio.crash(c);
+      audio.setEngine(0, false);
+      audio.setSkid(false);
+      vehicles.resolvePlayer(player);
+      // Enter prompt when close to a parked drivable car.
+      const near = vehicles.nearestDrivable(player.pos.x, player.pos.z, 4.5);
+      if (near) {
+        hud.setInteract(`Tekan E untuk masuk — ${near.vehicle.type.name}`);
+      } else {
+        hud.setInteract(null);
+      }
+    }
     thirdPerson.update(dt, player.pos);
     world.update(dt, now / 1000);
     // Beacon diamond bobs + spins above the waypoint.
@@ -257,7 +377,7 @@ function frame(now) {
       }
     }
     checkArrival();
-    hud.update(dt, fps, player, waypointInfo());
+    hud.update(dt, fps, player, waypointInfo(), driveHudInfo());
   } else if (state === 'menu') {
     // Slow cinematic orbit behind the spawn while on the menu.
     thirdPerson.yaw += dt * 0.05;
@@ -288,6 +408,51 @@ window.__embers = {
   get mission() {
     return { index: missionIndex, done: missionDone, text: missionText() };
   },
+  // Phase 3: driving + vehicle state.
+  get driving() { return driving; },
+  get drivenCar() {
+    if (!drivenCar) return null;
+    return {
+      name: drivenCar.type.name, type: drivenCar.typeName,
+      x: drivenCar.pos.x, z: drivenCar.pos.z,
+      heading: drivenCar.heading, speed: drivenCar.speed,
+      damage: drivenCar.damage,
+    };
+  },
+  get speedKmh() { return drivenCar ? Math.abs(drivenCar.speed) * 3.6 : 0; },
+  get vehicles() {
+    return vehicles.all.map((v) => ({
+      name: v.type.name, type: v.typeName, drivable: v.drivable, traffic: v.traffic,
+      x: v.pos.x, z: v.pos.z, heading: v.heading, speed: v.speed, damage: v.damage,
+    }));
+  },
+  // Test-only: enter a drivable car by type name (teleports the player
+  // next to it first, mirroring walking up and pressing E).
+  enterCar(typeName) {
+    const car = vehicles.drivables.find((v) => v.typeName === typeName);
+    if (!car) return false;
+    const rx = Math.cos(car.heading);
+    const rz = -Math.sin(car.heading);
+    player.pos.set(car.pos.x + rx * 2.6, 0, car.pos.z + rz * 2.6);
+    player.vel.set(0, 0, 0);
+    enterVehicle(car);
+    return true;
+  },
+  // Test-only: move a drivable car to a known spot, undamaged, stopped.
+  // Optional 5th arg sets damage (0..1) to verify the damage visuals.
+  placeCar(typeName, x, z, heading, damage) {
+    const car = vehicles.drivables.find((v) => v.typeName === typeName);
+    if (!car) return false;
+    car.pos.set(x, 0, z);
+    car.heading = heading;
+    car.speed = 0;
+    car.steer = 0;
+    car.damage = damage ?? 0;
+    car.group.position.copy(car.pos);
+    car.group.rotation.y = heading;
+    return true;
+  },
+  exitCar() { if (driving) exitVehicle(); return !driving; },
   get pois() { return world.pois.map((p) => ({ ...p })); },
   get bounds() { return { ...world.bounds }; },
   // Minimap pixel (canvas coords, 180x180) for a world point, so tests
@@ -310,6 +475,18 @@ window.__embers = {
 hud.showStart();
 refreshWaypoint();
 if (shotParam === 'play') startGame();
+if (shotParam === 'drive') {
+  startGame();
+  // Enter the sedan and roll it east on the spine road so the shot shows
+  // the driving camera behind the car, the car itself and a live speedometer.
+  window.__embers.enterCar('sedan');
+  if (drivenCar) {
+    drivenCar.pos.set(30, 0, 2.5); // eastbound lane of Jalan Merdeka
+    drivenCar.heading = Math.PI / 2; // east
+    drivenCar.speed = 9; // gentle roll; the test also drives it with W
+    thirdPerson.yaw = drivenCar.heading + Math.PI;
+  }
+}
 if (shotParam === 'district') {
   startGame();
   // Waterfront vantage: on the EW road just before the pier, facing east

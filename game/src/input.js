@@ -1,6 +1,7 @@
-// CITY OF EMBERS — input state (original, Phase 1).
-// Keyboard (WASD + arrows + Shift sprint + Esc/P pause) and mouse orbit
-// (drag, or pointer lock after clicking the canvas).
+// CITY OF EMBERS — input state (original, Phase 1; Phase 3: E + Space).
+// Keyboard (WASD + arrows + Shift sprint/boost + Space handbrake + E enter
+// or exit vehicle + Esc/P pause) and mouse orbit (drag, or pointer lock
+// after clicking the canvas).
 
 export function createInput(canvas) {
   const keys = new Set();
@@ -12,6 +13,7 @@ export function createInput(canvas) {
     pointerLocked: false,
     // One-shot edge flags, consumed by main.js each frame.
     pausePressed: false,
+    interactPressed: false,
     anyKeyPressed: false,
   };
 
@@ -21,11 +23,17 @@ export function createInput(canvas) {
     KeyA: 'left', ArrowLeft: 'left',
     KeyD: 'right', ArrowRight: 'right',
     ShiftLeft: 'sprint', ShiftRight: 'sprint',
+    Space: 'handbrake',
   };
 
   function onKeyDown(e) {
     if (e.code === 'Escape' || e.code === 'KeyP') {
       if (!e.repeat) state.pausePressed = true;
+      return;
+    }
+    // E = enter / exit vehicle (one-shot edge, no repeat).
+    if (e.code === 'KeyE') {
+      if (!e.repeat) state.interactPressed = true;
       return;
     }
     const action = KEYMAP[e.code];
@@ -108,6 +116,16 @@ export function createInput(canvas) {
     const p = state.pausePressed;
     state.pausePressed = false;
     return p;
+  };
+
+  state.consumeInteract = function consumeInteract() {
+    const p = state.interactPressed;
+    state.interactPressed = false;
+    return p;
+  };
+
+  state.handbrake = function handbrake() {
+    return keys.has('handbrake');
   };
 
   return state;

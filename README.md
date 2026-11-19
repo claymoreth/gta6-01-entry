@@ -27,6 +27,8 @@ node serve.ts
 
 Controls: WASD / arrow keys to move, SHIFT to sprint, mouse to orbit the
 camera (click to lock), click the minimap to set a GPS waypoint, ESC / P to pause.
+Near a parked car, press E to get in: W/S is gas and brake (S from a stop
+reverses), A/D steers, SPACE is the handbrake, SHIFT boosts, E gets out again.
 
 ## Phase 1 — 3D Vertical Slice
 
@@ -52,7 +54,28 @@ camera (click to lock), click the minimap to set a GPS waypoint, ESC / P to paus
 - Minimap now covers the whole city: roads, buildings by type, sea, park,
   pier, POI dots, player arrow (rotates with facing), waypoint diamond.
 
-Later phases add vehicles, police and wanted levels, combat, missions, and audio.
+## Phase 3 — Vehicles and Driving
+
+- Three drivable cars, all original low-poly models built from primitives:
+  a blue Sedan Ember (Downtown), a red Sports Ember (Residential), an orange
+  Truk Ember with a cargo bed (Waterfront). Four spinning wheels, headlights
+  and taillights, a working headlight beam at night.
+- Enter/exit with E (prompt appears near a car); the camera swings behind
+  the car while driving and returns on foot. Raka hides inside the car.
+- Arcade driving: gas, brake, reverse, steering that tightens with speed,
+  handbrake drift, boost, world collision (walls, containers, lamps),
+  vehicle-vs-vehicle collision, and damage — a badly damaged car smokes,
+  handles worse, and dies at 95% damage.
+- Civilian traffic: seven cars on three road loops (east-west spine,
+  Jalan Dermaga, Jalan Melati) with pure-pursuit steering, varied speeds,
+  obstacle braking (they stop for the player and for other cars), and a
+  stuck-recovery reverse manoeuvre.
+- Driving HUD: live speedometer in km/h, damage bar, car name; cars appear
+  as dots on the minimap (cyan for parked drivables, pale for traffic).
+- Synthesized sound (Web Audio, no files): engine pitch follows speed,
+  tyre skid on handbrake, crash thuds on impact.
+
+Later phases add police and wanted levels, combat, missions, and audio.
 
 ## Tech
 

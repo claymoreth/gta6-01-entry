@@ -39,6 +39,7 @@ writeFileSync(
   }),
 );
 
-// City of Embers hands in one night block of Ember Bay: a third-person 3D
-// open-world slice with a living street, towers, palms and a minimap.
+// City of Embers hands in Ember Bay at night: a third-person 3D open world
+// of three districts (Downtown, Residential, Waterfront) with drivable cars,
+// civilian traffic, a GPS waypoint system and a 3-stop exploration mission.
 console.log(`CITY OF EMBERS handed in: game/ + screenshots/ -> ${out}`);

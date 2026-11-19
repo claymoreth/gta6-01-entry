@@ -38,6 +38,15 @@ body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: #ee
 #crosshair { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: rgba(255,255,255,.85); box-shadow: 0 0 6px rgba(0,0,0,.8); }
 #hint { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); font-size: 12px; color: #dfe3ff; background: rgba(10,10,40,.5); padding: 6px 12px; border-radius: 20px; white-space: nowrap; }
 #toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); font-size: 17px; font-weight: 700; color: #ffd166; background: rgba(10,10,40,.7); padding: 10px 18px; border-radius: 8px; border: 1px solid rgba(255,209,102,.5); }
+/* Phase 3: enter-vehicle prompt + driving speedometer */
+#interact-prompt { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); font-size: 15px; font-weight: 600; color: #ffffff; background: rgba(10,10,40,.7); border: 1px solid rgba(255,209,102,.6); padding: 8px 16px; border-radius: 8px; white-space: nowrap; }
+#interact-prompt b { color: #ffd166; }
+#speedo { position: absolute; right: 18px; bottom: 158px; width: 200px; text-align: right; text-shadow: 0 2px 6px rgba(0,0,0,.9); }
+#speedo-name { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: #4ad8ff; }
+#speedo-num { font-size: 44px; font-weight: 800; line-height: 1; color: #ffffff; }
+#speed-unit { font-size: 14px; font-weight: 700; color: #c9cfff; margin-left: 6px; }
+#damage-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.fill.damage { width: 0%; background: linear-gradient(90deg, #ff8c42, #ff2a2a); }
 
 /* ---------- Overlays ---------- */
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(24,16,64,.55) 0%, rgba(5,5,20,.88) 100%); }

@@ -27,6 +27,13 @@ export function createHud(world, callbacks) {
     weapon: document.getElementById('weapon'),
     ammo: document.getElementById('ammo'),
     wanted: document.getElementById('wanted'),
+    speedo: document.getElementById('speedo'),
+    speedoName: document.getElementById('speedo-name'),
+    speedNum: document.getElementById('speed-num'),
+    damageRow: document.getElementById('damage-row'),
+    damageFill: document.getElementById('damage-fill'),
+    damageNum: document.getElementById('damage-num'),
+    interactPrompt: document.getElementById('interact-prompt'),
     toast: document.getElementById('toast'),
     startScreen: document.getElementById('start-screen'),
     pauseScreen: document.getElementById('pause-screen'),
@@ -79,7 +86,7 @@ export function createHud(world, callbacks) {
   });
 
   let pulseT = 0;
-  function drawMinimap(player, waypoint) {
+  function drawMinimap(player, waypoint, vehicles) {
     const g = mctx;
     g.clearRect(0, 0, SIZE, SIZE);
     g.fillStyle = '#0d0d24';
@@ -118,6 +125,18 @@ export function createHud(world, callbacks) {
       g.beginPath();
       g.arc(x, z, p.kind === 'safehouse' ? 3.5 : 2.5, 0, Math.PI * 2);
       g.fill();
+    }
+    // vehicles: traffic as pale dots, parked drivables as cyan dots.
+    // The driven car is the player arrow itself (player.pos tracks it).
+    if (vehicles) {
+      for (const v of vehicles) {
+        if (v.driven) continue;
+        const [x, z] = toMap(v.x, v.z);
+        g.fillStyle = v.drivable ? '#4ad8ff' : '#d8dce8';
+        g.beginPath();
+        g.arc(x, z, v.drivable ? 2.6 : 2, 0, Math.PI * 2);
+        g.fill();
+      }
     }
     // waypoint: line from player, then a pulsing diamond
     if (waypoint) {
@@ -168,7 +187,9 @@ export function createHud(world, callbacks) {
   }
 
   let lastDistrict = '';
-  function update(dt, fps, player, gps) {
+  // drive: { driving, speedKmh, name, damage, vehicles } or null (on foot).
+  // vehicles = [{ x, z, drivable, driven }] for minimap dots.
+  function update(dt, fps, player, gps, drive) {
     pulseT += dt;
     const { district, street } = world.districtAt(player.pos.x, player.pos.z);
     if (district !== lastDistrict) {
@@ -188,6 +209,17 @@ export function createHud(world, callbacks) {
     el.weapon.textContent = 'Tangan Kosong';
     el.ammo.textContent = '—';
     el.wanted.textContent = 'WANTED ☆☆☆☆☆';
+    // Phase 3: driving panel — speedometer (km/h) + damage bar + car name.
+    const driving = !!(drive && drive.driving);
+    el.speedo.classList.toggle('hidden', !driving);
+    if (driving) {
+      el.speedNum.textContent = `${Math.round(Math.abs(drive.speedKmh || 0))}`;
+      el.speedoName.textContent = (drive.name || 'KENDARAAN').toUpperCase();
+      const dmg = Math.max(0, Math.min(1, drive.damage || 0));
+      el.damageRow.classList.remove('hidden');
+      el.damageFill.style.width = `${dmg * 100}%`;
+      el.damageNum.textContent = `${Math.round(dmg * 100)}%`;
+    }
     // GPS readout + compass arrow toward the waypoint (relative to camera).
     if (gps && gps.waypoint) {
       el.gps.classList.remove('hidden');
@@ -203,7 +235,17 @@ export function createHud(world, callbacks) {
       el.gps.classList.add('hidden');
       el.compass.classList.add('hidden');
     }
-    drawMinimap(player, gps ? gps.waypoint : null);
+    drawMinimap(player, gps ? gps.waypoint : null, drive ? drive.vehicles : null);
+  }
+
+  // Phase 3: "Tekan E untuk masuk" prompt. text=null hides it.
+  function setInteract(text) {
+    if (text) {
+      el.interactPrompt.textContent = text;
+      el.interactPrompt.classList.remove('hidden');
+    } else {
+      el.interactPrompt.classList.add('hidden');
+    }
   }
 
   function setMission(mission) {
@@ -229,7 +271,7 @@ export function createHud(world, callbacks) {
   }
 
   return {
-    el, showToast, update, setMission, showStart, showGame, showPause, hidePause,
+    el, showToast, update, setMission, setInteract, showStart, showGame, showPause, hidePause,
     worldToMap: toMap, mapToWorld: toWorld,
   };
 }
