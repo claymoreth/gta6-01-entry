@@ -419,8 +419,8 @@ export function buildWorld(scene, opts) {
     }
     colliders.push(makeCollider(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 0, h, 'building'));
   }
-  pois.push({ name: 'Plaza Merdeka', x: 0, z: 0, kind: 'landmark', color: '#ffd166' });
-  pois.push({ name: 'Menara Ember', x: -22, z: -44, kind: 'landmark', color: '#ffd166' });
+  pois.push({ name: 'Merdeka Plaza', x: 0, z: 0, kind: 'landmark', color: '#ffd166' });
+  pois.push({ name: 'Ember Tower', x: -22, z: -44, kind: 'landmark', color: '#ffd166' });
 
   // ---- downtown alleys: 2 narrow gaps with dumpsters + a dim light ----
   const dumpMat = new THREE.MeshLambertMaterial({ color: 0x1e4d2a });
@@ -434,7 +434,7 @@ export function buildWorld(scene, opts) {
   }
   dumpster(30, -26, 0.3);
   dumpster(-30, 30, -0.2);
-  pois.push({ name: 'Gang Sempit', x: 30, z: -26, kind: 'alley', color: '#8a8fa8' });
+  pois.push({ name: 'Narrow Alley', x: 30, z: -26, kind: 'alley', color: '#8a8fa8' });
 
   // ---- palms along the downtown sidewalks (Phase 1, unchanged) ----
   const palmSpots = [];
@@ -592,7 +592,7 @@ export function buildWorld(scene, opts) {
       scene.add(tree);
       colliders.push(makeCollider(tx - 0.3, tz - 0.3, tx + 0.3, tz + 0.3, 0, 4, 'tree'));
     }
-    pois.push({ name: 'Taman Melati', x: -140, z: 37, kind: 'park', color: '#7ef0a8' });
+    pois.push({ name: 'Melati Park', x: -140, z: 37, kind: 'park', color: '#7ef0a8' });
   }
 
   // Balai Warga (community hall) — wider, pale walls, warm porch light.
@@ -616,7 +616,7 @@ export function buildWorld(scene, opts) {
     sign.position.set(-115, 6.4, -50.8);
     scene.add(sign);
     colliders.push(makeCollider(-123, -61, -107, -51, 0, 7, 'building'));
-    pois.push({ name: 'Balai Warga', x: -115, z: -56, kind: 'landmark', color: '#ffd166' });
+    pois.push({ name: 'Community Hall', x: -115, z: -56, kind: 'landmark', color: '#ffd166' });
   }
 
   // Safehouse 1: the house at (-155, -10) gets a green door light.
@@ -631,7 +631,7 @@ export function buildWorld(scene, opts) {
     p.position.set(-155, 2.2, -5.2);
     scene.add(p);
     lamps.push(p);
-    pois.push({ name: 'Safehouse — Rumah Hijau', x: -155, z: -10, kind: 'safehouse', color: '#37d67a' });
+    pois.push({ name: 'Safehouse — Green House', x: -155, z: -10, kind: 'safehouse', color: '#37d67a' });
   }
 
   // Residential streetlights: 2 real lights (park + Melati intersection).
@@ -670,7 +670,7 @@ export function buildWorld(scene, opts) {
   warehouse(85, 40, 24, 16, 12, whTex2);
   warehouse(140, -45, 20, 14, 9, whTex2);
   warehouse(140, 45, 20, 14, 11, whTex1);
-  pois.push({ name: 'Gudang Ember', x: 85, z: -40, kind: 'industrial', color: '#ff7a2f' });
+  pois.push({ name: 'Ember Warehouse', x: 85, z: -40, kind: 'industrial', color: '#ff7a2f' });
 
   // Container yard: stacks of coloured boxes between the warehouses.
   const containerCols = [0x2f6db3, 0xb33a2f, 0x3a7a4a, 0xb38a2f, 0x5a5a8a];
@@ -692,7 +692,7 @@ export function buildWorld(scene, opts) {
     }
     colliders.push(makeCollider(cx - 3, cz - 1.2, cx + 3, cz + 1.2, 0, stack * 2.6, 'container'));
   }
-  pois.push({ name: 'Yard Kontainer', x: 112, z: 0, kind: 'industrial', color: '#ff7a2f' });
+  pois.push({ name: 'Container Yard', x: 112, z: 0, kind: 'industrial', color: '#ff7a2f' });
 
   // Gantry cranes: 4 legs + top beam + jib + hook block.
   function gantryCrane(x, z, h, ry) {
@@ -725,7 +725,7 @@ export function buildWorld(scene, opts) {
   }
   gantryCrane(128, -28, 16, 0);
   gantryCrane(148, 28, 18, Math.PI / 2);
-  pois.push({ name: 'Crane Dermaga', x: 128, z: -28, kind: 'landmark', color: '#ff7a2f' });
+  pois.push({ name: 'Pier Crane', x: 128, z: -28, kind: 'landmark', color: '#ff7a2f' });
 
   // Wooden pier from the quay into the sea (walkable, flat).
   {
@@ -754,7 +754,7 @@ export function buildWorld(scene, opts) {
     colliders.push(makeCollider(140, -4, 172, -3.8, 0, 1, 'rail'));
     // pier end rail (blocks walking off the end, lighthouse sits behind it)
     colliders.push(makeCollider(171.8, -4, 172.2, 4, 0, 1, 'rail'));
-    pois.push({ name: 'Dermaga Ember', x: 156, z: 0, kind: 'landmark', color: '#4aa8ff' });
+    pois.push({ name: 'Ember Pier', x: 156, z: 0, kind: 'landmark', color: '#4aa8ff' });
   }
 
   // Lighthouse at the pier end: white/red tower + glowing lamp room.
@@ -789,7 +789,7 @@ export function buildWorld(scene, opts) {
     beaconLight.position.set(168, 17.3, 0);
     scene.add(beaconLight);
     colliders.push(makeCollider(166, -2, 170, 2, 0, 20, 'lighthouse'));
-    pois.push({ name: 'Mercusuar Ember', x: 168, z: 0, kind: 'landmark', color: '#ffe9a8' });
+    pois.push({ name: 'Ember Lighthouse', x: 168, z: 0, kind: 'landmark', color: '#ffe9a8' });
   }
 
   // The sea: a dark blue plane east of the quay (x 156..192).
@@ -830,7 +830,7 @@ export function buildWorld(scene, opts) {
     glow.position.set(132, 1.4, 42.4);
     scene.add(glow);
     colliders.push(makeCollider(128.5, 42.5, 135.5, 47.5, 0, 4.5, 'office'));
-    pois.push({ name: 'Safehouse — Kantor Dermaga', x: 132, z: 45, kind: 'safehouse', color: '#37d67a' });
+    pois.push({ name: 'Safehouse — Pier Office', x: 132, z: 45, kind: 'safehouse', color: '#37d67a' });
   }
 
   // Waterfront streetlights: 2 real lights (dock + yard), orange.
@@ -869,27 +869,27 @@ export function buildWorld(scene, opts) {
   function districtAt(x, z) {
     // Waterfront (east).
     if (x > 60) {
-      if (x > 152) return { district: 'WATERFRONT — Dermaga Ember', street: 'Dermaga Kayu' };
-      if (Math.abs(z) <= 9) return { district: 'WATERFRONT — Dermaga Ember', street: 'Jalan Merdeka' };
-      if (z < -20) return { district: 'WATERFRONT — Gudang Utara', street: 'Jalan Dermaga' };
-      if (z > 20) return { district: 'WATERFRONT — Gudang Selatan', street: 'Jalan Dermaga' };
-      return { district: 'WATERFRONT — Yard Kontainer', street: 'Jalan Dermaga' };
+      if (x > 152) return { district: 'WATERFRONT — Ember Pier', street: 'Wooden Pier' };
+      if (Math.abs(z) <= 9) return { district: 'WATERFRONT — Ember Pier', street: 'Merdeka Street' };
+      if (z < -20) return { district: 'WATERFRONT — North Warehouse', street: 'Pier Road' };
+      if (z > 20) return { district: 'WATERFRONT — South Warehouse', street: 'Pier Road' };
+      return { district: 'WATERFRONT — Container Yard', street: 'Pier Road' };
     }
     // Residential (west).
     if (x < -60) {
-      if (x < -125 && z >= 22 && z <= 52) return { district: 'RESIDENTIAL — Taman Melati', street: 'Jalan Taman' };
-      if (Math.abs(z) <= 9) return { district: 'RESIDENTIAL — Perumahan', street: 'Jalan Merdeka' };
-      if (Math.abs(x + 115) <= 9) return { district: 'RESIDENTIAL — Jalan Melati', street: 'Jalan Melati' };
-      return { district: 'RESIDENTIAL — Perumahan', street: 'Jalan Melati' };
+      if (x < -125 && z >= 22 && z <= 52) return { district: 'RESIDENTIAL — Melati Park', street: 'Park Road' };
+      if (Math.abs(z) <= 9) return { district: 'RESIDENTIAL — Housing', street: 'Merdeka Street' };
+      if (Math.abs(x + 115) <= 9) return { district: 'RESIDENTIAL — Jasmine Street', street: 'Jasmine Street' };
+      return { district: 'RESIDENTIAL — Housing', street: 'Jasmine Street' };
     }
     // Downtown (centre, Phase 1 names kept).
-    if (Math.abs(x) <= 9 && Math.abs(z) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Persimpangan Merdeka' };
-    if (Math.abs(x) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Jalan Merdeka' };
-    if (Math.abs(z) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Jalan Pantai' };
-    if (x > 0 && z < 0) return { district: 'DOWNTOWN — Menara Kembar', street: 'Jalan Menara' };
-    if (x < 0 && z < 0) return { district: 'DOWNTOWN — Plaza Utara', street: 'Jalan Plaza' };
-    if (x > 0 && z > 0) return { district: 'KAMPUNG PANTAI — Dermaga', street: 'Jalan Dermaga' };
-    return { district: 'KAMPUNG PANTAI — Pasar Malam', street: 'Jalan Pasar' };
+    if (Math.abs(x) <= 9 && Math.abs(z) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Merdeka Junction' };
+    if (Math.abs(x) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Merdeka Street' };
+    if (Math.abs(z) <= 9) return { district: 'EMBER BAY — DOWNTOWN', street: 'Beach Road' };
+    if (x > 0 && z < 0) return { district: 'DOWNTOWN — Twin Towers', street: 'Tower Road' };
+    if (x < 0 && z < 0) return { district: 'DOWNTOWN — North Plaza', street: 'Plaza Road' };
+    if (x > 0 && z > 0) return { district: 'BEACH VILLAGE — Pier', street: 'Pier Road' };
+    return { district: 'BEACH VILLAGE — Night Market', street: 'Market Road' };
   }
 
   function update(dt, t) {

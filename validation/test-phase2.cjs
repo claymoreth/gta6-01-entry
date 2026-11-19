@@ -91,9 +91,9 @@ async function poll(fn, timeoutMs, intervalMs = 400) {
   const dWater = await districtAt(100, 0);
   check('Waterfront district detected', /WATERFRONT/.test(dWater), dWater);
   const dPark = await districtAt(-140, 37);
-  check('Taman Melati district detected', /Taman Melati/.test(dPark), dPark);
+  check('Melati Park district detected', /Melati Park/.test(dPark), dPark);
   const dPier = await districtAt(160, 0);
-  check('Dermaga (pier) district detected', /Dermaga/.test(dPier), dPier);
+  check('Ember Pier district detected', /Ember Pier/.test(dPier), dPier);
 
   // Walk across the west boundary: teleport just inside downtown (x=-58),
   // hold A (west in camera space at yaw 0) until x < -60 and the district
@@ -164,10 +164,10 @@ async function poll(fn, timeoutMs, intervalMs = 400) {
   const missionAfter = await page.evaluate(() => window.__embers.mission);
   check('Waypoint arrival clears the custom waypoint', !!wpAfter && wpAfter.custom === false,
     wpAfter ? `now "${wpAfter.name}" custom=${wpAfter.custom}` : 'no waypoint');
-  check('Mission waypoint resumes after custom arrival', !!wpAfter && /Taman Melati|Mercusuar|Plaza/.test(wpAfter.name),
+  check('Mission waypoint resumes after custom arrival', !!wpAfter && /Melati Park|Ember Lighthouse|Merdeka Plaza/.test(wpAfter.name),
     wpAfter ? `"${wpAfter.name}"` : 'none');
 
-  // Mission arrival: teleport onto the mission waypoint (Taman Melati)
+  // Mission arrival: teleport onto the mission waypoint (Melati Park)
   // and verify the mission index advances.
   const m0 = await page.evaluate(() => window.__embers.mission.index);
   const missionWp = await page.evaluate(() => window.__embers.waypoint);

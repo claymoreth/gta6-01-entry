@@ -206,7 +206,7 @@ export function createHud(world, callbacks) {
     el.armourFill.style.width = '50%';
     el.armourNum.textContent = '50';
     el.money.textContent = '$0';
-    el.weapon.textContent = 'Tangan Kosong';
+    el.weapon.textContent = 'Bare Hands';
     el.ammo.textContent = '—';
     el.wanted.textContent = 'WANTED ☆☆☆☆☆';
     // Phase 3: driving panel — speedometer (km/h) + damage bar + car name.
@@ -214,7 +214,7 @@ export function createHud(world, callbacks) {
     el.speedo.classList.toggle('hidden', !driving);
     if (driving) {
       el.speedNum.textContent = `${Math.round(Math.abs(drive.speedKmh || 0))}`;
-      el.speedoName.textContent = (drive.name || 'KENDARAAN').toUpperCase();
+      el.speedoName.textContent = (drive.name || 'VEHICLE').toUpperCase();
       const dmg = Math.max(0, Math.min(1, drive.damage || 0));
       el.damageRow.classList.remove('hidden');
       el.damageFill.style.width = `${dmg * 100}%`;
@@ -223,7 +223,7 @@ export function createHud(world, callbacks) {
     // GPS readout + compass arrow toward the waypoint (relative to camera).
     if (gps && gps.waypoint) {
       el.gps.classList.remove('hidden');
-      el.gpsName.textContent = gps.waypoint.name || 'Tujuan';
+      el.gpsName.textContent = gps.waypoint.name || 'Destination';
       el.gpsDist.textContent = `${Math.round(gps.distance)} m`;
       el.compass.classList.remove('hidden');
       // Camera looks along (-sin yaw, -cos yaw); bearing to waypoint is

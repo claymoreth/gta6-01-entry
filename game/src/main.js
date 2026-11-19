@@ -43,9 +43,9 @@ const audio = createAudio();
 // always points at the current objective; clicking the minimap sets a
 // custom waypoint instead until it is reached, then the mission resumes.
 const MISSION_STOPS = [
-  { name: 'Taman Melati', x: -140, z: 37 },
-  { name: 'Mercusuar Ember', x: 168, z: 0 },
-  { name: 'Plaza Merdeka', x: 0, z: 0 },
+  { name: 'Melati Park', x: -140, z: 37 },
+  { name: 'Ember Lighthouse', x: 168, z: 0 },
+  { name: 'Merdeka Plaza', x: 0, z: 0 },
 ];
 const ARRIVE_RADIUS = 5; // metres
 let missionIndex = 0; // next stop to visit
@@ -55,11 +55,11 @@ let waypoint = null; // active waypoint { x, z, name, custom: bool }
 let beacon = null; // 3D beacon mesh marking the waypoint
 
 function missionText() {
-  if (missionDone) return { title: 'CITY OF EMBERS — Kota dijelajahi!', progress: '3/3 tujuan' };
+  if (missionDone) return { title: 'CITY OF EMBERS — City explored!', progress: '3/3 objectives' };
   const stop = MISSION_STOPS[missionIndex];
   return {
-    title: `CITY OF EMBERS — Pergi ke ${stop.name}`,
-    progress: `${missionIndex}/3 tujuan`,
+    title: `CITY OF EMBERS — Go to ${stop.name}`,
+    progress: `${missionIndex}/3 objectives`,
   };
 }
 
@@ -77,9 +77,9 @@ function refreshWaypoint() {
 }
 
 function setCustomWaypoint(x, z) {
-  customWaypoint = { x, z, name: 'Tujuan (minimap)' };
+  customWaypoint = { x, z, name: 'Destination (minimap)' };
   refreshWaypoint();
-  hud.showToast('Tujuan ditandai di GPS');
+  hud.showToast('Destination marked on GPS');
 }
 
 const hud = createHud(world, { onMinimapClick: setCustomWaypoint });
@@ -133,7 +133,7 @@ function checkArrival() {
   if (d > ARRIVE_RADIUS) return;
   if (waypoint.custom) {
     customWaypoint = null;
-    hud.showToast('Tujuan tercapai');
+    hud.showToast('Destination reached');
     refreshWaypoint();
     return;
   }
@@ -141,9 +141,9 @@ function checkArrival() {
   missionIndex += 1;
   if (missionIndex >= MISSION_STOPS.length) {
     missionDone = true;
-    hud.showToast('Kota dijelajahi! Semua tujuan tercapai');
+    hud.showToast('City explored! All objectives reached');
   } else {
-    hud.showToast(`Tujuan tercapai — lanjut ke ${MISSION_STOPS[missionIndex].name}`);
+    hud.showToast(`Destination reached — next: ${MISSION_STOPS[missionIndex].name}`);
   }
   refreshWaypoint();
 }
@@ -174,7 +174,7 @@ function enterVehicle(car) {
   thirdPerson.setDistance(10.5);
   thirdPerson.setHeight(2.8);
   hud.setInteract(null);
-  hud.showToast(`${car.type.name} — W/S gas & rem · A/D setir · SPASI handbrake · E keluar`);
+  hud.showToast(`${car.type.name} — W/S gas & brake · A/D steer · SPACE handbrake · E exit`);
 }
 
 function exitVehicle() {
@@ -195,7 +195,7 @@ function exitVehicle() {
   vehicles.setDriven(null);
   thirdPerson.setDistance(6.0);
   thirdPerson.setHeight(1.7);
-  hud.showToast('Keluar dari kendaraan');
+  hud.showToast('Exited vehicle');
 }
 
 function drivingControl() {
@@ -252,7 +252,7 @@ function startGame() {
   refreshWaypoint();
   state = 'playing';
   hud.showGame();
-  hud.showToast('Selamat datang di Ember Bay');
+  hud.showToast('Welcome to Ember Bay');
 }
 
 function pauseGame() {
@@ -281,7 +281,7 @@ function restartGame() {
   refreshWaypoint();
   state = 'playing';
   hud.showGame();
-  hud.showToast('Malam baru di Ember Bay');
+  hud.showToast('A new night in Ember Bay');
 }
 
 hud.el.startBtn.addEventListener('click', startGame);
@@ -361,7 +361,7 @@ function frame(now) {
       // Enter prompt when close to a parked drivable car.
       const near = vehicles.nearestDrivable(player.pos.x, player.pos.z, 4.5);
       if (near) {
-        hud.setInteract(`Tekan E untuk masuk — ${near.vehicle.type.name}`);
+        hud.setInteract(`Press E to enter — ${near.vehicle.type.name}`);
       } else {
         hud.setInteract(null);
       }
@@ -498,6 +498,6 @@ if (shotParam === 'district') {
   player.facing = Math.PI / 2;
   thirdPerson.yaw = -Math.PI / 2;
   setCustomWaypoint(168, 0);
-  if (waypoint) waypoint.name = 'Mercusuar Ember';
+  if (waypoint) waypoint.name = 'Ember Lighthouse';
 }
 requestAnimationFrame(frame);

@@ -22,10 +22,10 @@
   <div id="hud" class="hidden">
     <div id="district">
       <div id="district-name">EMBER BAY — DOWNTOWN</div>
-      <div id="street-name">Jalan Merdeka &middot; Blok 1</div>
-      <div id="mission">CITY OF EMBERS &mdash; Jelajahi Ember Bay</div>
-      <div id="mission-progress">0/3 tujuan</div>
-      <div id="gps" class="hidden"><span id="gps-name">Tujuan</span> &middot; <span id="gps-dist">0 m</span></div>
+      <div id="street-name">Merdeka Street &middot; Block 1</div>
+      <div id="mission">CITY OF EMBERS &mdash; Explore Ember Bay</div>
+      <div id="mission-progress">0/3 objectives</div>
+      <div id="gps" class="hidden"><span id="gps-name">Destination</span> &middot; <span id="gps-dist">0 m</span></div>
     </div>
     <div id="compass" class="hidden"><div id="compass-arrow">&#9650;</div></div>
     <div id="stats">
@@ -39,16 +39,16 @@
       <div class="bar-row"><span class="bar-label">HEALTH</span><div class="bar"><div id="health-fill" class="fill health"></div></div><span id="health-num" class="bar-num">100</span></div>
       <div class="bar-row"><span class="bar-label">ARMOUR</span><div class="bar"><div id="armour-fill" class="fill armour"></div></div><span id="armour-num" class="bar-num">50</span></div>
       <div class="vitals-row"><span id="money">$0</span><span id="wanted">WANTED &star;&star;&star;&star;&star;</span></div>
-      <div class="vitals-row"><span id="weapon">Tangan Kosong</span><span id="ammo">&mdash;</span></div>
+      <div class="vitals-row"><span id="weapon">Bare Hands</span><span id="ammo">&mdash;</span></div>
     </div>
     <div id="crosshair"></div>
-    <div id="interact-prompt" class="hidden">Tekan <b>E</b> untuk masuk</div>
+    <div id="interact-prompt" class="hidden">Press <b>E</b> to enter</div>
     <div id="speedo" class="hidden">
-      <div id="speedo-name">SEDAN EMBER</div>
-      <div id="speedo-num"><span id="speed-num">0</span><span id="speed-unit">KM/J</span></div>
+      <div id="speedo-name">EMBER SEDAN</div>
+      <div id="speedo-num"><span id="speed-num">0</span><span id="speed-unit">KM/H</span></div>
       <div id="damage-row" class="hidden"><span class="bar-label">DAMAGE</span><div class="bar"><div id="damage-fill" class="fill damage"></div></div><span id="damage-num" class="bar-num">0%</span></div>
     </div>
-    <div id="hint">WASD / &larr;&uarr;&darr;&rarr; bergerak &middot; SHIFT lari &middot; E masuk mobil &middot; Mouse putar kamera &middot; ESC jeda</div>
+    <div id="hint">WASD / &larr;&uarr;&darr;&rarr; move &middot; SHIFT run &middot; E enter car &middot; Mouse rotate camera &middot; ESC pause</div>
     <div id="toast" class="hidden"></div>
   </div>
 
@@ -56,26 +56,26 @@
   <div id="start-screen" class="overlay">
     <div class="panel">
       <h1>CITY OF<br>EMBERS</h1>
-      <p class="tagline">Kota tropis pesisir. Tiga distrik. Satu malam.<br>Jelajahi Ember Bay dengan berjalan kaki atau naik mobil — klik minimap untuk menandai tujuan.</p>
+      <p class="tagline">A tropical coastal city. Three districts. One night.<br>Explore Ember Bay on foot or by car — click the minimap to mark a destination.</p>
       <button id="start-btn" class="btn">START GAME</button>
       <div class="controls">
-        <div><b>WASD / Panah</b> — bergerak / mengemudi</div>
+        <div><b>WASD / Arrows</b> — move / drive</div>
         <div><b>SHIFT</b> — sprint / boost</div>
-        <div><b>E</b> — masuk / keluar mobil</div>
-        <div><b>SPASI</b> — handbrake (saat mengemudi)</div>
-        <div><b>Mouse</b> — putar kamera (klik untuk kunci)</div>
-        <div><b>Klik minimap</b> — tandai tujuan (GPS)</div>
-        <div><b>ESC / P</b> — jeda</div>
+        <div><b>E</b> — enter / exit car</div>
+        <div><b>SPACE</b> — handbrake (while driving)</div>
+        <div><b>Mouse</b> — rotate camera (click to lock)</div>
+        <div><b>Click minimap</b> — mark destination (GPS)</div>
+        <div><b>ESC / P</b> — pause</div>
       </div>
-      <p class="fine">Game 3D orisinal — berjalan offline dari file statis. Dibangun untuk make.fun gta6-01.</p>
+      <p class="fine">Original 3D game — runs offline from static files. Built for make.fun gta6-01.</p>
     </div>
   </div>
 
   <!-- Pause screen -->
   <div id="pause-screen" class="overlay hidden">
     <div class="panel">
-      <h2>JEDA</h2>
-      <p class="tagline">Ember Bay menunggumu.</p>
+      <h2>PAUSED</h2>
+      <p class="tagline">Ember Bay awaits you.</p>
       <button id="resume-btn" class="btn">RESUME</button>
       <button id="restart-btn" class="btn ghost">RESTART</button>
     </div>

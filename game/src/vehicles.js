@@ -16,23 +16,23 @@ import { WORLD_BOUNDS } from './world.js';
 // ---- vehicle types (original Ember Bay fleet) ----
 const TYPES = {
   sedan: {
-    name: 'Sedan Ember', color: 0x3a6db3, len: 4.4, wid: 1.9, h: 1.35,
+    name: 'Ember Sedan', color: 0x3a6db3, len: 4.4, wid: 1.9, h: 1.35,
     wheelbase: 2.7, wheelR: 0.34, topSpeed: 28, accel: 11, brake: 24,
     maxSteer: 0.55, reverseTop: 10,
   },
   sports: {
-    name: 'Sports Ember', color: 0xd23a2f, len: 4.2, wid: 2.0, h: 1.08,
+    name: 'Ember Sports', color: 0xd23a2f, len: 4.2, wid: 2.0, h: 1.08,
     wheelbase: 2.6, wheelR: 0.32, topSpeed: 38, accel: 15, brake: 28,
     maxSteer: 0.5, reverseTop: 12,
   },
   truck: {
-    name: 'Truk Ember', color: 0xc47a1e, len: 6.4, wid: 2.4, h: 2.2,
+    name: 'Ember Truck', color: 0xc47a1e, len: 6.4, wid: 2.4, h: 2.2,
     wheelbase: 3.9, wheelR: 0.45, topSpeed: 22, accel: 7, brake: 18,
     maxSteer: 0.45, reverseTop: 8,
   },
   // Traffic cars reuse the sedan body with muted civic colours.
   traffic: {
-    name: 'Mobil Warga', color: 0x8a8f9a, len: 4.3, wid: 1.85, h: 1.3,
+    name: 'Civic Car', color: 0x8a8f9a, len: 4.3, wid: 1.85, h: 1.3,
     wheelbase: 2.7, wheelR: 0.33, topSpeed: 11, accel: 6, brake: 16,
     maxSteer: 0.5, reverseTop: 6,
   },

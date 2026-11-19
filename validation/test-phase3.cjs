@@ -123,7 +123,7 @@ const embers = (page, expr) => page.evaluate((e) => {
     const el = document.getElementById('interact-prompt');
     return { hidden: el.classList.contains('hidden'), text: el.textContent };
   });
-  check('enter prompt near car', !prompt.hidden && prompt.text.includes('Tekan E'),
+  check('enter prompt near car', !prompt.hidden && prompt.text.includes('Press E'),
     JSON.stringify(prompt));
 
   // 5. Press E -> driving, speedometer visible.
