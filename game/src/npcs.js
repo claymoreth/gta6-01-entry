@@ -3,7 +3,7 @@ import { resolveCircle, clamp } from './collision.js';
 import { WORLD_BOUNDS } from './world.js';
 const PED_COUNT = 14;
 const FOOT_POLICE_COUNT = 3;
-const WANTED_HEAT = { theft: 15, damage: 20, policeDamage: 25, pedHit: 35 };
+const WANTED_HEAT = { theft: 15, damage: 20, policeDamage: 25, pedHit: 35, assault: 25, weaponFire: 15 };
 const LEVEL_HEAT = [0, 1, 21, 41, 61, 86];
 function levelForHeat(h) {
   if (h <= 0) return 0;
@@ -420,11 +420,20 @@ class FootPolice {
     this.stuckZ = start.z;
     this.sidestepTimer = 0;
     this.sidestepDir = 1;
+    this.downTimer = 0;
+    this.lying = false;
     this.syncPose();
   }
   syncPose() {
     const swing = Math.sin(this.walkPhase) * this.swingAmp;
-    this.renderer.setPose(this.index, this.pos, this.heading, swing, this.height, false, this.policeIndex);
+    this.renderer.setPose(this.index, this.pos, this.heading, swing, this.height, this.lying, this.policeIndex);
+  }
+  knockDown() {
+    if (this.state === 'down') return;
+    this.state = 'down';
+    this.downTimer = 4;
+    this.lying = true;
+    this.syncPose();
   }
   reset() {
     const start = this.patrol.points[0];
@@ -442,6 +451,8 @@ class FootPolice {
     this.holdTimer = 0;
     this.stuckTimer = 0;
     this.sidestepTimer = 0;
+    this.downTimer = 0;
+    this.lying = false;
     this.syncPose();
   }
   patrolTarget() {
@@ -475,6 +486,15 @@ class FootPolice {
     return moved;
   }
   update(dt, ctx) {
+    if (this.state === 'down') {
+      this.downTimer -= dt;
+      if (this.downTimer <= 0) {
+        this.lying = false;
+        this.state = 'patrol';
+        this.syncPose();
+      }
+      return;
+    }
     if (this.holdTimer > 0) {
       this.holdTimer -= dt;
       return;
@@ -662,6 +682,18 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       audio.blip();
     }
   }
+  function clearWanted() {
+    heat = 0;
+    level = 0;
+    status = '';
+    prevStatus = '';
+    for (const u of units) {
+      u.state = 'patrol';
+      u.searchPoints = [];
+      u.searchIndex = 0;
+    }
+    audio.setSiren(false, 0);
+  }
   function dispatchTo(x, z) {
     const sorted = [...units].sort(
       (a, b) => Math.hypot(a.pos.x - x, a.pos.z - z) - Math.hypot(b.pos.x - x, b.pos.z - z),
@@ -705,6 +737,8 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       type === 'theft' ? WANTED_HEAT.theft
       : type === 'pedHit' ? WANTED_HEAT.pedHit
       : type === 'policeDamage' ? WANTED_HEAT.policeDamage
+      : type === 'assault' ? WANTED_HEAT.assault
+      : type === 'weaponFire' ? WANTED_HEAT.weaponFire
       : WANTED_HEAT.damage;
     let policeWitness = false;
     let pedWitness = false;
@@ -1175,6 +1209,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     update,
     reset,
     reportCrime,
+    clearWanted,
     triggerDanger,
     wantedInfo,
     minimapInfo,

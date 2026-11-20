@@ -7,6 +7,7 @@ import { createHud } from './hud.js';
 import { createVehicles } from './vehicles.js';
 import { createAudio } from './audio.js';
 import { createNpcs } from './npcs.js';
+import { createCombat } from './combat.js';
 const canvas = document.getElementById('game');
 const lowFx = new URLSearchParams(window.location.search).get('lowfx') === '1';
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !lowFx });
@@ -25,36 +26,18 @@ const thirdPerson = createCamera(camera, world.colliders);
 const input = createInput(canvas);
 const vehicles = createVehicles(scene, world);
 const audio = createAudio();
-const MISSION_STOPS = [
-  { name: 'Melati Park', x: -140, z: 37 },
-  { name: 'Ember Lighthouse', x: 168, z: 0 },
-  { name: 'Merdeka Plaza', x: 0, z: 0 },
-];
 const ARRIVE_RADIUS = 5;
-let missionIndex = 0;
-let missionDone = false;
 let customWaypoint = null;
 let waypoint = null;
 let beacon = null;
-function missionText() {
-  if (missionDone) return { title: 'CITY OF EMBERS — City explored!', progress: '3/3 objectives' };
-  const stop = MISSION_STOPS[missionIndex];
-  return {
-    title: `CITY OF EMBERS — Go to ${stop.name}`,
-    progress: `${missionIndex}/3 objectives`,
-  };
-}
 function refreshWaypoint() {
   if (customWaypoint) {
     waypoint = { ...customWaypoint, custom: true };
-  } else if (!missionDone) {
-    const stop = MISSION_STOPS[missionIndex];
-    waypoint = { x: stop.x, z: stop.z, name: stop.name, custom: false };
   } else {
-    waypoint = null;
+    waypoint = combat.waypoint();
   }
   updateBeacon();
-  hud.setMission(missionText());
+  hud.setMission(combat.missionText());
 }
 function setCustomWaypoint(x, z) {
   customWaypoint = { x, z, name: 'Destination (minimap)' };
@@ -63,6 +46,7 @@ function setCustomWaypoint(x, z) {
 }
 const hud = createHud(world, { onMinimapClick: setCustomWaypoint });
 const npcs = createNpcs(scene, world, vehicles, audio, hud);
+const combat = createCombat({ scene, world, player, npcs, vehicles, hud, audio, input, cam: thirdPerson });
 function makeBeacon() {
   const g = new THREE.Group();
   const pillar = new THREE.Mesh(
@@ -113,14 +97,10 @@ function checkArrival() {
     refreshWaypoint();
     return;
   }
-  missionIndex += 1;
-  if (missionIndex >= MISSION_STOPS.length) {
-    missionDone = true;
-    hud.showToast('City explored! All objectives reached');
-  } else {
-    hud.showToast(`Destination reached — next: ${MISSION_STOPS[missionIndex].name}`);
+  const before = combat.missionIndex;
+  if (combat.arrive()) {
+    if (combat.missionIndex === before) hud.showToast('Objective reached');
   }
-  refreshWaypoint();
 }
 function waypointInfo() {
   if (!waypoint) return { waypoint: null, distance: 0, bearing: 0, camYaw: thirdPerson.yaw };
@@ -136,6 +116,7 @@ function waypointInfo() {
 let driving = false;
 let drivenCar = null;
 let theftSeq = 0;
+let lastMissionKey = '';
 function enterVehicle(car) {
   driving = true;
   drivenCar = car;
@@ -145,6 +126,7 @@ function enterVehicle(car) {
   thirdPerson.setDistance(10.5);
   thirdPerson.setHeight(2.8);
   hud.setInteract(null);
+  if (combat.onEnterCar(car)) refreshWaypoint();
   hud.showToast(`${car.type.name} — W/S gas & brake · A/D steer · SPACE handbrake · E exit`);
 }
 function exitVehicle() {
@@ -202,7 +184,7 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
-function startGame() {
+function startGame(fresh = true) {
   player.reset();
   player.group.visible = true;
   thirdPerson.reset();
@@ -211,13 +193,13 @@ function startGame() {
   driving = false;
   drivenCar = null;
   audio.init();
-  missionIndex = 0;
-  missionDone = false;
+  if (fresh) combat.reset();
+  else if (!combat.continueGame()) combat.reset();
   customWaypoint = null;
   refreshWaypoint();
   state = 'playing';
   hud.showGame();
-  hud.showToast('Welcome to Ember Bay');
+  hud.showToast(fresh ? 'Welcome to Ember Bay' : 'Welcome back to Ember Bay');
 }
 function pauseGame() {
   if (state !== 'playing') return;
@@ -238,8 +220,7 @@ function restartGame() {
   npcs.reset();
   driving = false;
   drivenCar = null;
-  missionIndex = 0;
-  missionDone = false;
+  combat.reset();
   customWaypoint = null;
   refreshWaypoint();
   state = 'playing';
@@ -247,6 +228,8 @@ function restartGame() {
   hud.showToast('A new night in Ember Bay');
 }
 hud.el.startBtn.addEventListener('click', startGame);
+hud.el.continueBtn.addEventListener('click', () => startGame(false));
+hud.el.saveBtn.addEventListener('click', () => { combat.save(); hud.showToast('Progress saved'); });
 hud.el.resumeBtn.addEventListener('click', resumeGame);
 hud.el.restartBtn.addEventListener('click', restartGame);
 const shotParam = new URLSearchParams(window.location.search).get('shot');
@@ -288,7 +271,7 @@ function frame(now) {
         }
       }
     }
-    if (driving && drivenCar) {
+    if (!combat.wasted && driving && drivenCar) {
       const ctrl = drivingControl();
       const result = vehicles.update(dt, ctrl, null, npcs.pedPositions());
       for (const c of result.crashes) audio.crash(c);
@@ -310,7 +293,7 @@ function frame(now) {
       while (dyaw < -Math.PI) dyaw += Math.PI * 2;
       thirdPerson.yaw += dyaw * Math.min(1, 1.5 * dt);
       hud.setInteract(null);
-    } else {
+    } else if (!combat.wasted) {
       const mv = input.moveVector();
       player.update(dt, mv, thirdPerson.yaw);
       const result = vehicles.update(dt, null, { x: player.pos.x, z: player.pos.z }, npcs.pedPositions());
@@ -338,6 +321,7 @@ function frame(now) {
       drivenCar: driving ? drivenCar : null,
       vehicles: vehicles.all,
     });
+    combat.update(dt, { driving });
     thirdPerson.update(dt, player.pos);
     world.update(dt, now / 1000);
     if (beacon.visible) {
@@ -348,7 +332,12 @@ function frame(now) {
       }
     }
     checkArrival();
-    hud.update(dt, fps, player, waypointInfo(), driveHudInfo(), npcs.wantedInfo(), npcs.minimapInfo());
+    const missionKey = `${combat.missionIndex}:${combat.missionStep}`;
+    if (missionKey !== lastMissionKey) {
+      lastMissionKey = missionKey;
+      refreshWaypoint();
+    }
+    hud.update(dt, fps, player, waypointInfo(), driveHudInfo(), npcs.wantedInfo(), npcs.minimapInfo(), combat.info());
   } else if (state === 'menu') {
     thirdPerson.yaw += dt * 0.05;
     thirdPerson.update(dt, player.pos);
@@ -371,8 +360,18 @@ window.__embers = {
   get waypoint() { return waypoint ? { ...waypoint } : null; },
   get waypointDistance() { return waypointInfo().distance; },
   get mission() {
-    return { index: missionIndex, done: missionDone, text: missionText() };
+    return { index: combat.missionIndex, done: combat.missionDone, text: combat.missionText(), timer: combat.missionTimer, step: combat.missionStep };
   },
+  get combat() { return combat.info(); },
+  combatFire() { return combat.fire(); },
+  combatMelee() { return combat.melee(); },
+  combatReload() { return combat.reload(); },
+  combatSwitch(i) { combat.switchWeapon(i); },
+  combatDamage(n) { combat.debugHurt(n); },
+  debugSetMission(i) { return combat.debugSetMission(i); },
+  debugSetAmmo(m, r) { combat.debugSetAmmo(m, r); },
+  saveGame() { return combat.save(); },
+  get wasted() { return combat.wasted; },
   get driving() { return driving; },
   get drivenCar() {
     if (!drivenCar) return null;
@@ -439,6 +438,7 @@ window.__embers = {
   },
 };
 hud.showStart();
+if (combat.loadSave()) hud.el.continueBtn.classList.remove('hidden');
 refreshWaypoint();
 if (shotParam === 'play') startGame();
 if (shotParam === 'drive') {

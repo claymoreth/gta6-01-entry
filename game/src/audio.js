@@ -127,5 +127,24 @@ export function createAudio() {
       src.stop(ctx.currentTime + 0.4);
     } catch {  }
   }
-  return { init, setEngine, setSkid, crash, setSiren, blip };
+  function sfx(d, v, f) {
+    if (!ctx || !noiseBuf) return;
+    try {
+      const s = ctx.createBufferSource();
+      s.buffer = noiseBuf;
+      const fl = ctx.createBiquadFilter();
+      fl.type = 'lowpass';
+      fl.frequency.value = f;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(v, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d);
+      s.connect(fl);
+      fl.connect(g);
+      g.connect(ctx.destination);
+      s.start();
+      s.stop(ctx.currentTime + d + 0.05);
+    } catch {  }
+  }
+  function shot() { sfx(0.12, 0.3, 1400); }
+  return { init, setEngine, setSkid, crash, setSiren, blip, shot };
 }

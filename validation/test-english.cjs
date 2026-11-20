@@ -132,7 +132,7 @@ function hardErrors(list) {
     const ids = ['district-name', 'street-name', 'mission', 'mission-progress', 'weapon', 'hint', 'gps-name'];
     return ids.map((id) => `${id}=${document.getElementById(id).textContent}`).join(' | ');
   });
-  check('HUD English (district/street/mission/weapon/hint)', /Merdeka Street/.test(hudText) && /Go to Melati Park/.test(hudText) && /0\/3 objectives/.test(hudText) && /Bare Hands/.test(hudText) && /move/.test(hudText) && /enter car/.test(hudText), hudText);
+  check('HUD English (district/street/mission/weapon/hint)', /Merdeka Street/.test(hudText) && /Go to Melati Park/.test(hudText) && /Mission 1\/5/.test(hudText) && /Bare Hands/.test(hudText) && /move/.test(hudText) && /enter car/.test(hudText), hudText);
 
   // 3. District / street names in all 3 districts (via teleport).
   const districtAt = async (x, z) => {
@@ -159,7 +159,7 @@ function hardErrors(list) {
     const w = window.__embers.waypoint;
     return w ? w.name : null;
   });
-  check('mission waypoint name English', ['Melati Park', 'Ember Lighthouse', 'Merdeka Plaza'].includes(gps), `"${gps}"`);
+  check('mission waypoint name English', ['Melati Park', 'Ember Lighthouse', 'Merdeka Plaza', 'Ember Pier', 'Green House', 'Pier Office', 'Ember Sports'].includes(gps), `"${gps}"`);
 
   // 5. Enter prompt near the sedan (English, new car name).
   await page.evaluate(() => window.__embers.teleport(28, -14));

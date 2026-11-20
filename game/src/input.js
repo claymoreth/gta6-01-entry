@@ -7,6 +7,10 @@ export function createInput(canvas) {
     pointerLocked: false,
     pausePressed: false,
     interactPressed: false,
+    firePressed: false,
+    meleePressed: false,
+    reloadPressed: false,
+    switchVal: null,
     anyKeyPressed: false,
   };
   const KEYMAP = {
@@ -24,6 +28,16 @@ export function createInput(canvas) {
     }
     if (e.code === 'KeyE') {
       if (!e.repeat) state.interactPressed = true;
+      return;
+    }
+    const c = e.code;
+    if (c === 'KeyF' || c === 'KeyR' || c === 'KeyQ' || c === 'Digit1' || c === 'Digit2') {
+      if (!e.repeat) {
+        if (c === 'KeyF') state.meleePressed = true;
+        else if (c === 'KeyR') state.reloadPressed = true;
+        else if (c === 'KeyQ') state.switchVal = -1;
+        else state.switchVal = c === 'Digit1' ? 0 : 1;
+      }
       return;
     }
     const action = KEYMAP[e.code];
@@ -50,8 +64,9 @@ export function createInput(canvas) {
     }
   }
   let dragging = false;
-  function onMouseDown() {
+  function onMouseDown(e) {
     dragging = true;
+    if (e.button === 0 && state.pointerLocked) state.firePressed = true;
   }
   function onMouseUp() {
     dragging = false;
@@ -106,6 +121,9 @@ export function createInput(canvas) {
     state.interactPressed = false;
     return p;
   };
+  for (const [name, key] of [['consumeFire', 'firePressed'], ['consumeMelee', 'meleePressed'], ['consumeReload', 'reloadPressed'], ['consumeSwitch', 'switchVal']]) {
+    state[name] = () => { const v = state[key]; state[key] = key === 'switchVal' ? null : false; return v; };
+  }
   state.handbrake = function handbrake() {
     return keys.has('handbrake');
   };

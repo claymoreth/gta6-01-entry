@@ -1,0 +1,22 @@
+PASS  HTTP server serves game/ — (node:9555) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/hatch/workspace/makefun/gta6-01-entry/serve.ts is not specified and it doesn't parse as CommonJS.
+PASS  Start screen visible on load
+PASS  WebGL context alive
+PASS  Start Game button starts play
+PASS  WASD movement moves the player — moved 3.14m
+PASS  Sprint is faster than walk — walk 3.36m vs sprint 5.73m per 5s
+PASS  Mouse drag rotates camera — yaw 0.00 -> -0.73
+PASS  Building collision blocks the player — pos (21.7, -7.7)
+PASS  Player stays on the ground (y=0) — y=0
+PASS  ESC pauses the game — state=paused
+PASS  Resume returns to play
+INFO  draw calls=170 triangles=4574
+PASS  No page errors — 0 errors
+PASS  No console errors — 0 errors
+PASS  No failed requests — 0 failed
+PASS  Full-quality session auto-starts via ?shot=play — state=playing
+INFO  wall FPS @1280x720 full quality (headless SwiftShader) = 0.8; HUD meter = 0.8
+PASS  No page errors in visual session — 0 errors
+PASS  Screenshot 01-city-exploration.jpg <= 256 KiB — 114.8 KiB
+PASS  Screenshot 02-night-street.jpg <= 256 KiB — 123.2 KiB
+
+==== PHASE 1 TESTS: 18/18 passed ====

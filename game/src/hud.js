@@ -29,11 +29,16 @@ export function createHud(world, callbacks) {
     damageFill: document.getElementById('damage-fill'),
     damageNum: document.getElementById('damage-num'),
     interactPrompt: document.getElementById('interact-prompt'),
+    crosshair: document.getElementById('crosshair'),
+    dmg: document.getElementById('dmg'),
+    wastedScreen: document.getElementById('wasted-screen'),
     toast: document.getElementById('toast'),
     startScreen: document.getElementById('start-screen'),
     pauseScreen: document.getElementById('pause-screen'),
     startBtn: document.getElementById('start-btn'),
+    continueBtn: document.getElementById('continue-btn'),
     resumeBtn: document.getElementById('resume-btn'),
+    saveBtn: document.getElementById('save-btn'),
     restartBtn: document.getElementById('restart-btn'),
   };
   const mctx = el.minimap.getContext('2d');
@@ -218,7 +223,7 @@ export function createHud(world, callbacks) {
     g.fillText('N', 6, 12);
   }
   let lastDistrict = '';
-  function update(dt, fps, player, gps, drive, wanted, npcs) {
+  function update(dt, fps, player, gps, drive, wanted, npcs, combat) {
     pulseT += dt;
     const { district, street } = world.districtAt(player.pos.x, player.pos.z);
     if (district !== lastDistrict) {
@@ -230,13 +235,15 @@ export function createHud(world, callbacks) {
       el.streetName.textContent = street;
     }
     el.pos.textContent = `x ${player.pos.x.toFixed(1)} · z ${player.pos.z.toFixed(1)}`;
-    el.healthFill.style.width = '100%';
-    el.healthNum.textContent = '100';
-    el.armourFill.style.width = '50%';
-    el.armourNum.textContent = '50';
-    el.money.textContent = '$0';
-    el.weapon.textContent = 'Bare Hands';
-    el.ammo.textContent = '—';
+    const c = combat;
+    el.healthFill.style.width = `${Math.max(0, Math.min(100, c.health))}%`;
+    el.healthNum.textContent = `${Math.max(0, c.health)}`;
+    el.armourFill.style.width = `${Math.max(0, Math.min(100, c.armour))}%`;
+    el.armourNum.textContent = `${Math.max(0, c.armour)}`;
+    el.money.textContent = `$${c.money}`;
+    el.weapon.textContent = c.weapon;
+    el.ammo.textContent = c.ammo;
+    if (el.crosshair) el.crosshair.classList.toggle('armed', c.weapon === 'Pistol');
     const wLevel = wanted ? (wanted.level || 0) : 0;
     const wStatus = wanted ? (wanted.status || '') : '';
     el.wanted.textContent = `WANTED ${'★'.repeat(wLevel)}${'☆'.repeat(5 - wLevel)}`;
@@ -288,6 +295,19 @@ export function createHud(world, callbacks) {
     el.pauseScreen.classList.add('hidden');
     el.hud.classList.add('hidden');
   }
+  function flashCross(cls, ms) {
+    if (!el.crosshair) return;
+    el.crosshair.classList.add(cls);
+    setTimeout(() => el.crosshair.classList.remove(cls), ms);
+  }
+  function flashDamage() {
+    if (!el.dmg) return;
+    el.dmg.style.opacity = '1';
+    setTimeout(() => { el.dmg.style.opacity = '0'; }, 60);
+  }
+  function setWasted(on) {
+    if (el.wastedScreen) el.wastedScreen.classList.toggle('hidden', !on);
+  }
   function showGame() {
     el.startScreen.classList.add('hidden');
     el.pauseScreen.classList.add('hidden');
@@ -301,6 +321,7 @@ export function createHud(world, callbacks) {
   }
   return {
     el, showToast, update, setMission, setInteract, showStart, showGame, showPause, hidePause,
+    flashCross, flashDamage, setWasted,
     worldToMap: toMap, mapToWorld: toWorld,
   };
 }

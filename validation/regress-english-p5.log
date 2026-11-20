@@ -1,0 +1,28 @@
+PASS  server up — http://127.0.0.1:8916/
+PASS  start screen English tagline — CITY OF | EMBERS
+PASS  start screen controls English — controls block ok
+PASS  start screen: no Indonesian words — clean
+PASS  welcome toast English — "Welcome to Ember Bay"
+PASS  HUD English (district/street/mission/weapon/hint) — district-name=EMBER BAY — DOWNTOWN | street-name=Merdeka Street | mission=M1 — First Arrival: Go to Melati Park | mission-progress=Mission 1/5 | weapon=Bare Hands | hint=WASD move · E enter car · Click fire · F punch · R reload · Q weapon · ESC pause | gps-name=Melati Park
+PASS  Residential: Melati Park / Park Road — RESIDENTIAL — Melati Park · Park Road
+PASS  Waterfront: Ember Pier / Merdeka Street — WATERFRONT — Ember Pier · Merdeka Street
+PASS  Waterfront pier end: Wooden Pier — WATERFRONT — Ember Pier · Wooden Pier
+PASS  Downtown: Merdeka Junction — EMBER BAY — DOWNTOWN · Merdeka Junction
+PASS  Downtown EW spine: Beach Road — EMBER BAY — DOWNTOWN · Beach Road
+FAIL  mission waypoint name English — "Ember Sports"
+PASS  enter prompt English — {"hidden":false,"text":"Press E to enter — Ember Sedan"}
+PASS  driving HUD English (EMBER SEDAN + KM/H) — EMBER SEDAN 7 KM/H (peak 5 km/h)
+PASS  exit vehicle works, toast English — driving=false, toasts seen: ["EMBER BAY — DOWNTOWN","DOWNTOWN — Twin Towers"]
+PASS  pause screen English — PAUSED |  | Ember Bay awaits you. |  | RESUME SAVE RESTART
+PASS  visible DOM: no Indonesian words — clean
+SESSION A perf: FPS 3.2 (wall-clock, 640x360 lowfx)
+PASS  no console errors / failed requests (logic) — clean
+SHOT drive state: {"driving":true,"speedKmh":33.862556980351755,"speedo":"34","speedoName":"EMBER SEDAN","speedoUnit":"KM/H","mission":"M1 — First Arrival: Go to Melati Park","district":"EMBER BAY — DOWNTOWN","street":"Beach Road","fps":0.7692307692307692,"drawCalls":977,"triangles":21070}
+PASS  shot=drive: English driving HUD — EMBER SEDAN 34 KM/H · M1 — First Arrival: Go to Melati Park · EMBER BAY — DOWNTOWN · Beach Road
+PASS  screenshot validation/05-english-ui.jpg saved — 77 KiB
+SESSION B perf: FPS 0.8 (wall-clock, 1280x720 full quality) · draw calls 977 · triangles 21070
+PASS  no console errors / failed requests (visuals) — clean
+
+==== ENGLISH CHECK: 20/21 PASS ====
+FAILED:
+ - mission waypoint name English: "Ember Sports"

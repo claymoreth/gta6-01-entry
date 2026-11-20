@@ -201,11 +201,11 @@ async function poll(fn, timeoutMs, intervalMs = 400) {
   });
   check('HUD shows district + street', hudText.district.length > 3 && hudText.street.length > 2,
     `${hudText.district} / ${hudText.street}`);
-  check('HUD shows mission + progress', hudText.mission.length > 5 && /\d\/3/.test(hudText.progress),
+  check('HUD shows mission + progress', hudText.mission.length > 5 && /Mission \d\/5/.test(hudText.progress),
     `${hudText.mission} (${hudText.progress})`);
   check('HUD shows health + armour numbers', hudText.health === '100' && hudText.armour === '50',
     `health ${hudText.health}, armour ${hudText.armour}`);
-  check('HUD shows money + weapon + ammo + wanted', hudText.money === '$0' && hudText.weapon.length > 3 && hudText.wanted.includes('WANTED'),
+  check('HUD shows money + weapon + ammo + wanted', /^\$\d+$/.test(hudText.money) && hudText.weapon.length > 3 && hudText.wanted.includes('WANTED'),
     `${hudText.money} / ${hudText.weapon} / ${hudText.ammo} / ${hudText.wanted}`);
   check('GPS readout visible while a waypoint is active', hudText.gpsVisible, 'gps element shown');
 

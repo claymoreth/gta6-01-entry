@@ -40,13 +40,14 @@
       <div class="vitals-row"><span id="weapon">Bare Hands</span><span id="ammo">&mdash;</span></div>
     </div>
     <div id="crosshair"></div>
+    <div id="dmg"></div>
     <div id="interact-prompt" class="hidden">Press <b>E</b> to enter</div>
     <div id="speedo" class="hidden">
       <div id="speedo-name">EMBER SEDAN</div>
       <div id="speedo-num"><span id="speed-num">0</span><span id="speed-unit">KM/H</span></div>
       <div id="damage-row" class="hidden"><span class="bar-label">DAMAGE</span><div class="bar"><div id="damage-fill" class="fill damage"></div></div><span id="damage-num" class="bar-num">0%</span></div>
     </div>
-    <div id="hint">WASD / &larr;&uarr;&darr;&rarr; move &middot; SHIFT run &middot; E enter car &middot; Mouse rotate camera &middot; ESC pause</div>
+    <div id="hint">WASD move &middot; E enter car &middot; Click fire &middot; F punch &middot; R reload &middot; Q weapon &middot; ESC pause</div>
     <div id="toast" class="hidden"></div>
   </div>
   <div id="start-screen" class="overlay">
@@ -54,12 +55,15 @@
       <h1>CITY OF<br>EMBERS</h1>
       <p class="tagline">A tropical coastal city. Three districts. One night.<br>Explore Ember Bay on foot or by car — click the minimap to mark a destination.</p>
       <button id="start-btn" class="btn">START GAME</button>
+      <button id="continue-btn" class="btn hidden">CONTINUE</button>
       <div class="controls">
         <div><b>WASD / Arrows</b> — move / drive</div>
         <div><b>SHIFT</b> — sprint / boost</div>
         <div><b>E</b> — enter / exit car</div>
         <div><b>SPACE</b> — handbrake (while driving)</div>
         <div><b>Mouse</b> — rotate camera (click to lock)</div>
+        <div><b>Click</b> — fire pistol</div>
+        <div><b>F</b> — punch &middot; <b>R</b> — reload &middot; <b>Q / 1 / 2</b> — weapon</div>
         <div><b>Click minimap</b> — mark destination (GPS)</div>
         <div><b>ESC / P</b> — pause</div>
         <div><b>Police</b> — crimes raise your wanted level; break line of sight and hide to escape</div>
@@ -72,7 +76,14 @@
       <h2>PAUSED</h2>
       <p class="tagline">Ember Bay awaits you.</p>
       <button id="resume-btn" class="btn">RESUME</button>
+      <button id="save-btn" class="btn ghost">SAVE</button>
       <button id="restart-btn" class="btn ghost">RESTART</button>
+    </div>
+  </div>
+  <div id="wasted-screen" class="overlay hidden">
+    <div class="panel">
+      <h2 class="wasted">WASTED</h2>
+      <p class="tagline">You wake up at a safehouse.</p>
     </div>
   </div>
 </div>
