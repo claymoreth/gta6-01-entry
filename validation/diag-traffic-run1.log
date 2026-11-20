@@ -1,0 +1,8 @@
+car[0] path=83.9m final=(-75.1,1.6) speed=5.75 heading=1.57
+car[1] path=24.8m final=(164.7,1.3) speed=-1.07 heading=-3.29
+car[2] path=14.4m final=(-161.4,9.8) speed=2.63 heading=1.59
+car[3] path=9.3m final=(118,46) speed=-0.19 heading=3.14
+car[4] path=81.8m final=(117,26.2) speed=-1.44 heading=0.04
+car[5] path=84.5m final=(-111.5,-35.6) speed=1.69 heading=3.17
+car[6] path=69.2m final=(-113.4,16.6) speed=4.35 heading=0.04
+DIAG CRASH: Cannot read properties of undefined (reading 'x')

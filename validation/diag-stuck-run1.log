@@ -1,0 +1,7 @@
+paths over ~35s: 6.2, 6.2, 6.2, 6.2, 6.2, 6.2, 6.2
+slowest = car[2] at (-163.6,2.4) speed=4.28 heading=-0.14
+DIAG CRASH: page.evaluate: SyntaxError: Unexpected token '('
+    at new Function (<anonymous>)
+    at eval (eval at evaluate (:370:30), <anonymous>:1:8)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)

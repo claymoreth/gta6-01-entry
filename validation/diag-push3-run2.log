@@ -1,0 +1,13 @@
+t=0 player (0.00, 0.00) wanted={"level":2,"heat":25,"status":"PURSUIT","lastKnown":{"x":0,"z":0},"lastSeenTime":2.017700000000001}
+t=2 player (0.00, 0.00) moved=0.00 nearest type=police police=true traffic=false dist=2.3 at (-0.5,2.3) h=-3.03 spd=6.4 | policeStates[0:investigate,1:patrol,2:patrol,3:pursue,4:patrol]
+t=4 player (0.00, -1.06) moved=1.06 nearest type=police police=true traffic=false dist=2.9 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:investigate,1:patrol,2:patrol,3:pursue,4:patrol]  <<<< MOVED
+t=6 player (0.00, -1.11) moved=0.05 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:investigate,1:patrol,2:patrol,3:pursue,4:patrol]  <<<< MOVED
+t=8 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:investigate,1:patrol,2:patrol,3:pursue,4:patrol]
+t=10 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:investigate,1:patrol,2:patrol,3:pursue,4:patrol]
+t=12 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:investigate,1:patrol,2:patrol,3:pursue,4:patrol]
+t=14 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:pursue,1:patrol,2:patrol,3:pursue,4:patrol]
+t=16 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:pursue,1:patrol,2:patrol,3:pursue,4:patrol]
+t=18 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:pursue,1:patrol,2:patrol,3:pursue,4:patrol]
+t=20 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:pursue,1:patrol,2:patrol,3:pursue,4:patrol]
+t=22 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:pursue,1:patrol,2:patrol,3:pursue,4:patrol]
+t=24 player (0.00, -1.11) moved=0.00 nearest type=police police=true traffic=false dist=3.0 at (-0.5,1.8) h=-3.09 spd=0.0 | policeStates[0:pursue,1:patrol,2:patrol,3:pursue,4:patrol]

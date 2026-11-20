@@ -1,0 +1,4 @@
+start player at (0.0, 0.0)
+after 30 game-s player at (0.0, 0.0) — moved 0.0 m
+DIAG ERR TypeError: Cannot read properties of undefined (reading 'x')
+    at /home/hatch/workspace/makefun/gta6-01-entry/validation/diag-push.cjs:51:35

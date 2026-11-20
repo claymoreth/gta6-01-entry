@@ -205,11 +205,11 @@ export function buildWorld(scene, opts) {
   const pois = [];
   scene.background = new THREE.Color(0x0a0a1e);
   scene.fog = new THREE.FogExp2(0x0d0d26, 0.0075);
-  const hemi = new THREE.HemisphereLight(0x4a4a8a, 0x0c0a14, 0.55);
+  const hemi = new THREE.HemisphereLight(0x4a4a8a, 0x0c0a14, 1.3);
   scene.add(hemi);
-  const ambient = new THREE.AmbientLight(0x2a2a55, 0.5);
+  const ambient = new THREE.AmbientLight(0x2a2a55, 1.2);
   scene.add(ambient);
-  const moon = new THREE.DirectionalLight(0x9db4ff, 0.7);
+  const moon = new THREE.DirectionalLight(0x9db4ff, 1.4);
   moon.position.set(-40, 60, -25);
   moon.castShadow = !lowFx;
   moon.shadow.mapSize.set(2048, 2048);
@@ -399,6 +399,8 @@ export function buildWorld(scene, opts) {
   }
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x22222e });
   const lampMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
+  const poolGeo = new THREE.CircleGeometry(3.4, 16);
+  const poolMat = new THREE.MeshBasicMaterial({ color: 0xffc978, transparent: true, opacity: 0.13, depthWrite: false });
   const lightSpots = [[-9, -9], [9, -9], [-9, 9], [9, 9], [-9, 0], [9, 0]];
   const lampSpots = [];
   for (let x = -50; x <= 50; x += 12.5) {
@@ -421,6 +423,10 @@ export function buildWorld(scene, opts) {
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.14, 0.3), lampMat);
     head.position.set(1.4, 6.22, 0);
     g.add(head);
+    const pool = new THREE.Mesh(poolGeo, poolMat);
+    pool.rotation.x = -Math.PI / 2;
+    pool.position.set(1.4, 0.05, 0);
+    g.add(pool);
     g.position.set(x, 0, z);
     g.rotation.y = Math.atan2(-x, -z);
     scene.add(g);

@@ -1,0 +1,19 @@
+t=0 player (0.00, 0.00)
+t=2 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=10.8 at (10.5,2.5) h=1.69 spd=2.2
+t=4 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=11.2 at (10.9,2.4) h=1.78 spd=3.1
+t=6 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=11.7 at (11.4,2.2) h=1.90 spd=4.0
+t=8 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=12.2 at (12.1,2.0) h=2.04 spd=4.8
+t=10 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=13.0 at (12.9,1.4) h=2.26 spd=5.7
+t=12 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=13.6 at (13.6,0.7) h=2.44 spd=6.4
+t=14 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.1 at (14.1,-0.2) h=2.64 spd=7.0
+t=16 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.5 at (14.5,-1.2) h=2.86 spd=7.5
+t=18 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.9 at (14.6,-2.8) h=3.16 spd=8.2
+t=20 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.9 at (14.3,-4.4) h=3.49 spd=8.8
+t=22 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.7 at (13.6,-5.6) h=3.74 spd=8.8
+t=24 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.3 at (13.1,-5.9) h=3.89 spd=3.7
+t=26 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=14.1 at (12.6,-6.2) h=4.02 spd=2.1
+t=28 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=13.8 at (12.2,-6.6) h=4.14 spd=3.3
+t=30 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=13.5 at (11.7,-6.8) h=4.25 spd=4.0
+t=32 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=12.9 at (10.8,-7.2) h=4.41 spd=5.0
+t=34 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=12.4 at (10.0,-7.3) h=4.50 spd=5.6
+t=36 player (0.00, 0.00) moved=0.00 nearestCar type=police traffic=false dist=11.8 at (9.2,-7.5) h=4.57 spd=4.6

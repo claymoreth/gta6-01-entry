@@ -1,0 +1,6 @@
+vehicles at load: [["sedan",28,-11.5,""],["sports",-100,-20,""],["truck",108,30,""],["traffic",-159.9,2.5,"T"],["traffic",163.6,0,"T"],["traffic",-160.1,-2.5,"T"],["traffic",118,54.9,"T"],["traffic",112,-54.9,"T"],["traffic",-112,49.9,"T"],["traffic",-118,-48.5,"T"],["police",10.2,2.5,"P"],["police",118,39.8,"P"]]
+t=0 sedan=(8.572,2.548) spd=0
+t=1 sedan=(8.572,2.548) spd=0
+t=2 sedan=(8.572,2.548) spd=0
+t=3 sedan=(8.572,2.548) spd=0
+t=4 sedan=(8.572,2.548) spd=0

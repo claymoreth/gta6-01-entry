@@ -1,0 +1,8 @@
+traffic car 0 at -158.6 2.5 type traffic
+traffic car 0 now at -159.2 2.5 (moved 0.7 m while held)
+player at -155.6 2.5 dist to car 3.6
+after E: driving = true , drivenCar = {"name":"Civic Car","type":"traffic","x":-159.9208034242542,"z":2.4988776356175872,"heading":1.5739529756762984,"speed":-2.1753256289864846,"damage":0}
+ped placed at -158.5 -0.1 state idle
+after punch 1: ped state=flee at (-158.5,-0.1)
+after punch 2: ped state=flee at (-158.5,-0.1)
+after punch 3: ped state=flee at (-156.9,-0.1)

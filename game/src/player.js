@@ -13,6 +13,11 @@ export function createPlayer(scene, colliders) {
   const jeans = new THREE.MeshLambertMaterial({ color: 0x2c3e63 });
   const shoe = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
   const hair = new THREE.MeshLambertMaterial({ color: 0x14100c });
+  function makeBox(w, h, d, m, x, y, z) {
+    const q = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+    q.position.set(x, y, z);
+    return q;
+  }
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.62, 0.3), jacket);
   torso.position.y = 1.12;
   torso.castShadow = true;
@@ -33,6 +38,12 @@ export function createPlayer(scene, colliders) {
   const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.24, 0.08), hair);
   hairBack.position.set(0, 1.72, -0.13);
   group.add(hairBack);
+  for (const s of [-1, 1]) {
+    group.add(makeBox(0.04, 0.05, 0.02, hair, s * 0.07, 1.68, 0.16));
+    group.add(makeBox(0.03, 0.08, 0.08, skin, s * 0.16, 1.64, 0));
+  }
+  group.add(makeBox(0.05, 0.08, 0.05, skin, 0, 1.62, 0.17));
+  group.add(makeBox(0.12, 0.02, 0.02, hair, 0, 1.52, 0.16));
   function limb(mat, w, h, d, x, y) {
     const pivot = new THREE.Group();
     pivot.position.set(x, y, 0);

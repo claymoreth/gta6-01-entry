@@ -1,0 +1,13 @@
+
+--- round 0: police car at (115.9,36.2) heading=4.06 speed=-0.11 state=patrol forward=(-0.80,-0.60)
+  veh Ember Truck: (108.0,30.0) d=10.0 dot=1.00 speed=0.00 traffic=false police=false  <-- BLOCKS
+  veh Civic Car: (118.0,45.9) d=10.0 dot=-0.76 speed=-0.04 traffic=true police=false
+
+--- round 1: police car at (115.8,36.2) heading=4.07 speed=0.64 state=patrol forward=(-0.80,-0.60)
+  veh Ember Truck: (108.0,30.0) d=10.0 dot=1.00 speed=0.00 traffic=false police=false  <-- BLOCKS
+  veh Civic Car: (118.0,46.0) d=10.0 dot=-0.75 speed=-0.15 traffic=true police=false
+  veh Police Interceptor: (115.9,36.2) d=0.0 dot=-1.00 speed=0.27 traffic=false police=true
+
+--- round 2: police car at (115.8,36.2) heading=4.07 speed=0.00 state=patrol forward=(-0.80,-0.60)
+  veh Ember Truck: (108.0,30.0) d=10.0 dot=1.00 speed=0.00 traffic=false police=false  <-- BLOCKS
+  veh Civic Car: (118.0,46.0) d=10.0 dot=-0.76 speed=-0.23 traffic=true police=false

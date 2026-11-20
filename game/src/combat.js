@@ -153,7 +153,7 @@ export function createCombat(o) {
     if (allDone) return { title: 'CITY OF EMBERS — Story complete!', progress: '5/5 missions' };
     const m = MS[mi];
     const st = curStep();
-    const obj = m.k === 3 ? (hadHeat ? 'Lose the police' : 'Get the police on your tail')
+    const obj = m.k === 3 ? (hadHeat ? 'Lose the police' : 'Get the police on your tail — commit a crime where people can see you')
       : m.k === 2 && si === 0 ? 'Find the Ember Sports car'
       : m.k === 2 ? 'Drive to Ember Pier'
       : `Go to ${st ? st[2] : ''}`;

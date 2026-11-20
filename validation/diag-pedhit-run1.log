@@ -1,0 +1,13 @@
+enterCar returned: true, driving=true
+drivenCar: {"name":"Ember Sedan","type":"sedan","x":8.67056738609806,"z":2.5699755429214597,"heading":1.5707963267948966,"speed":0,"damage":0}
+t=2s car=(8.7,2.6) h=1.57 spd=1.0 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=4s car=(9.0,2.6) h=1.57 spd=2.4 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=6s car=(9.5,2.6) h=1.57 spd=3.7 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=8s car=(10.2,2.6) h=1.57 spd=4.8 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=10s car=(11.0,2.6) h=1.57 spd=5.9 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=12s car=(12.0,2.6) h=1.57 spd=6.9 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=14s car=(13.2,2.6) h=1.57 spd=7.8 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=16s car=(14.4,2.6) h=1.57 spd=8.7 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=18s car=(15.8,2.6) h=1.57 spd=9.5 | ped0=(30.0,2.5) state=idle | anyDown=none
+t=20s car=(17.8,2.6) h=1.57 spd=10.4 | ped0=(30.0,2.5) state=idle | anyDown=none
+crimes: []

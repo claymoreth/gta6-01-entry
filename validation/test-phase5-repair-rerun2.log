@@ -1,0 +1,61 @@
+PASS  server up — http://127.0.0.1:8919/
+PASS  game loads + playing — state=playing
+SESSION A perf: FPS 6.1 (wall-clock, 480x270 lowfx)
+PASS  switch to Pistol — weapon=Pistol
+PASS  HUD weapon/ammo shows Pistol 12 / 48 — weapon=Pistol ammo=12 / 48
+PASS  switch back to Bare Hands — weapon=Bare Hands ammo=—
+PASS  fire once: ammo drops 12 -> 11 — before=12 / 48 after=11 / 48
+PASS  fire cooldown blocks immediate re-fire — ammo=11 / 48
+PASS  fire after cooldown: ammo drops to 10 — ammo=10 / 48
+PASS  ped down after 2 pistol hits — ped0 state=down
+PASS  downed ped recovers (gets up) — recovered state=flee
+FAIL  punch makes ped flee — ped1 state=idle
+FAIL  3 punches down the ped — ped1 state=idle
+PASS  ammo set to 0 / 48 — ammo=0 / 48
+PASS  reload shows Reloading… — ammo=Reloading…
+PASS  reload completes: mag 12 / 36 — ammo=12 / 36
+PASS  officer has line of sight to player — los=true
+PASS  witnessed shot raises wanted to level 1 — level=1 heat=15.0
+PASS  M1 title: Go to Melati Park — title=M1 — First Arrival: Go to Melati Park
+PASS  M1 progress: Mission 1/5 — progress=Mission 1/5
+PASS  M1 completes on arrival -> M2 starts — mission index=1
+PASS  M2 title: The Delivery — title=M2 — The Delivery: Go to Ember Pier
+PASS  M1 reward +$100 — money 0 -> 100
+PASS  M2 timer counts down — timer 120 -> 117
+PASS  M2 completes on delivery -> M3 starts — mission index=2
+PASS  M3 title: Lost Vehicle / Find the Ember Sports car — title=M3 — Lost Vehicle: Find the Ember Sports car
+PASS  M3 step 1 after entering sports car — step=1 title=M3 — Lost Vehicle: Drive to Ember Pier
+PASS  M3 completes driving sports to pier -> M4 starts — mission index=3
+PASS  M4 title: Police Pressure — title=M4 — Police Pressure: Get the police on your tail — commit a crime where people can see you
+PASS  M4: wanted raised (level >= 2) — level=3
+PASS  M4 completes when wanted back to 0 -> M5 starts — mission index=4
+PASS  M5 title: Final Connection — title=M5 — Final Connection: Go to Merdeka Plaza
+PASS  M5 all 4 stops -> story complete — done=true title=CITY OF EMBERS — Story complete!
+PASS  total mission rewards $1350 — money=$1350
+PASS  saveGame writes localStorage — saved=true key=true
+PASS  CONTINUE button visible after reload with save — visible=true
+PASS  continue restores mission 2 + position — mission=2 pos=(30.0,10.0)
+PASS  corrupt save: game loads, CONTINUE hidden — hidden=true state=playing
+PASS  WASTED screen shows on lethal damage — wasted=true visible=true
+PASS  respawn after WASTED timer — respawned=true
+PASS  respawn at nearest safehouse, health 100, -$100 — pos=(128.1,45.0) health=100 money=$0 (was $0)
+PASS  HUD visible text: no Indonesian words — clean
+PASS  no real console/page errors (Session A) — clean
+SESSION B perf: FPS 0.9 (wall-clock, 1280x720 full) — 928 draw calls, 20214 triangles
+p5-01-combat.jpg: 104 KiB
+p5-02: ped0 state=down at (0.0,-8.0)
+p5-02-npc-down.jpg: 101 KiB
+p5-03: wanted level=1 status=SEARCH
+p5-03-police-response.jpg: 105 KiB
+p5-04-mission-brief.jpg: 106 KiB
+p5-05: mission index=1 title=M2 — The Delivery: Go to Ember Pier
+p5-05-mission-complete.jpg: 71 KiB
+p5-06-wasted.jpg: 41 KiB
+p5-07: save written=true
+p5-07-save.jpg: 38 KiB
+PASS  no real console/page errors (Session B) — clean
+
+PHASE 5: 41/43 checks passed
+FAILED:
+ - punch makes ped flee — ped1 state=idle
+ - 3 punches down the ped — ped1 state=idle

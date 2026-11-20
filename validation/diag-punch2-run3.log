@@ -1,0 +1,6 @@
+ped0 after 2 shots: state=down
+ped0 recovered: null
+player before punch section: (0.69, 3.31)
+at punch: player=(0.69, 3.31) ped1=(0.00, -2.00) state=idle dist=5.35
+combatMelee() returned: false
+after punch: ped1 state=idle

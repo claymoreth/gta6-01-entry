@@ -1,0 +1,4 @@
+start player at (0.0, 0.0)
+after 30 game-s player at (0.0, 0.0) — moved 0.0 m
+ped1 at (0.0, -2.0), dist from player 2.0 m (punch range 2.2)
+after punch: ped1 state=flee

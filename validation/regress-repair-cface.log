@@ -1,0 +1,30 @@
+=== test-phase1 ===
+PASS  Screenshot 02-night-street.jpg <= 256 KiB — 125.0 KiB
+
+==== PHASE 1 TESTS: 18/18 passed ====
+exit: 0
+=== test-phase2 ===
+PASS  Screenshot 03-districts-gps.jpg <= 256 KiB — 55.2 KiB
+
+==== PHASE 2 TESTS: 29/29 passed ====
+exit: 0
+=== test-phase3 ===
+PASS  no console errors / failed requests (visuals) — clean
+
+==== PHASE 3: 26/26 PASS ====
+exit: 0
+=== test-english ===
+PASS  no console errors / failed requests (visuals) — clean
+
+==== ENGLISH CHECK: 21/21 PASS ====
+exit: 0
+=== test-phase4 ===
+PHASE 4: 34/36 checks passed
+  FAILED: real theft (E into a traffic car) raises wanted when witnessed — driving=false, car=none, theft logged=false witnessed=-, level 0 -> 0
+  FAILED: real pedestrian hit (driven car) is a witnessed crime — ped down=false, pedHit logged=false witnessed=-, level=0 heat=0
+exit: 0
+=== test-phase5 ===
+FAILED:
+ - punch makes ped flee — ped1 state=idle
+ - 3 punches down the ped — ped1 state=flee
+exit: 0

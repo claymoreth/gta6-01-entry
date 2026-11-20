@@ -1,0 +1,44 @@
+PASS  server up — http://127.0.0.1:8923/
+PASS  game loads + playing — state=playing
+PASS  M4 objective explains the trigger — title=M4 — Police Pressure: Get the police on your tail — commit a crime where people can see you
+  candidate (150,40): nearest ped 43.6 m, nearest police 33.4 m
+  candidate (158,-30): nearest ped 30.7 m, nearest police 54.6 m
+PASS  found a witness-free spot for the unwitnessed test — spot=(158,-30)
+PASS  unwitnessed crime: logged witnessed=false — type=weaponFire witnessed=false
+PASS  unwitnessed crime: wanted stays 0 — level 0 -> 0, heat=0.0
+PASS  unwitnessed crime: toast explains no one saw it — toast="No one saw that — no wanted level"
+PASS  officer has line of sight to player — los=true
+PASS  witnessed shot raises wanted to level >= 1 — level=1 heat=15.0 status=PURSUIT
+PASS  M4: wanted raised to level >= 1 — level=3
+PASS  M4 objective flips to Lose the police once wanted — title=M4 — Police Pressure: Lose the police
+PASS  M4 completes when wanted back to 0 -> M5 starts — mission index=4
+PASS  M4 reward +$200 — money $200 -> $400
+PASS  entered the Ember Sedan — entered=true driving=true
+PASS  sedan moved a measurable distance while driving — moved 10.2 m, speed 10.3 m/s
+PASS  nose-vs-travel angle near 0 degrees (was 90.0) — angle=0.0 deg (vel heading=-1.57, nose heading=-1.57)
+PASS  7 traffic cars present — count=7
+  traffic[0]: path=83.5 m, max off-loop=1.8 m, end off-loop=1.4 m
+  traffic[1]: path=12.2 m, max off-loop=1.1 m, end off-loop=0.7 m
+  traffic[2]: path=1.4 m, max off-loop=8.3 m, end off-loop=7.3 m
+  traffic[3]: path=31.8 m, max off-loop=0.2 m, end off-loop=0.1 m
+  traffic[4]: path=39.8 m, max off-loop=2.7 m, end off-loop=1.6 m
+  traffic[5]: path=59.5 m, max off-loop=2.3 m, end off-loop=0.4 m
+  traffic[6]: path=69.8 m, max off-loop=2.8 m, end off-loop=0.1 m
+FAIL  every traffic car keeps moving and stays near its loop — see per-car lines above (pre-fix: 2 cars moved 0 m, max off-loop 63.5 m)
+PASS  no real console/page errors (Session A) — clean
+repair-04-lighting.jpg: 100 KiB
+lighting brightness at (60,0): mean 20.5/255 (pre-fix: 16.6)
+PASS  road brightness clearly higher than pre-fix 16.6 — mean=20.5/255
+repair-05-face.jpg: 112 KiB
+vehicle shot: sedan at (27.8,-11.5) heading=-1.57 speed=1.4
+repair-02-vehicle.jpg: 94 KiB
+screenshots/04-vehicle-driving.jpg: 96 KiB (re-taken)
+traffic shot: 7/7 traffic cars within 10 m of a loop road
+repair-03-traffic.jpg: 70 KiB
+PASS  traffic visible near roads in the visual session — 7/7 cars within 10 m of a loop
+repair-01-m4.jpg: 59 KiB
+PASS  no real console/page errors (Session B) — clean
+
+REPAIR C+FACE: 21/22 checks passed
+FAILED:
+ - every traffic car keeps moving and stays near its loop — see per-car lines above (pre-fix: 2 cars moved 0 m, max off-loop 63.5 m)

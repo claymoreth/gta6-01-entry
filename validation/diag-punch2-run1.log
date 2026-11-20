@@ -1,0 +1,5 @@
+ped0 after 2 shots: state=idle
+ped0 recovered: idle
+player before punch section: (0.00, 0.00)
+DIAG ERR TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at /home/hatch/workspace/makefun/gta6-01-entry/validation/diag-punch2.cjs:79:98

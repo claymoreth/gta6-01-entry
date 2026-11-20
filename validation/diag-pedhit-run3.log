@@ -1,0 +1,16 @@
+enterCar returned: true, driving=true
+drivenCar: {"name":"Ember Sedan","type":"sedan","x":8.668678548924483,"z":2.572875131304527,"heading":1.5707963267948966,"speed":0,"damage":0}
+t=2s car=(8.7,2.6) h=1.57 spd=1.0 | ped0=(30.0,2.5) state=idle | policeCar=(14.5,-6.3) | anyDown=none
+t=4s car=(9.2,2.6) h=1.57 spd=2.8 | ped0=(30.0,2.5) state=idle | policeCar=(14.2,-6.2) | anyDown=none
+t=6s car=(9.9,2.6) h=1.57 spd=4.5 | ped0=(30.0,2.5) state=idle | policeCar=(13.8,-6.2) | anyDown=none
+t=8s car=(11.0,2.6) h=1.57 spd=5.9 | ped0=(30.0,2.5) state=idle | policeCar=(13.1,-6.4) | anyDown=none
+t=10s car=(12.4,2.6) h=1.57 spd=7.2 | ped0=(30.0,2.5) state=idle | policeCar=(12.2,-6.7) | anyDown=none
+t=12s car=(14.4,2.6) h=1.57 spd=8.7 | ped0=(30.0,2.5) state=idle | policeCar=(10.9,-6.9) | anyDown=none
+t=14s car=(16.3,2.6) h=1.57 spd=9.7 | ped0=(30.0,2.5) state=idle | policeCar=(9.6,-7.0) | anyDown=none
+t=16s car=(18.9,2.6) h=1.57 spd=10.8 | ped0=(30.0,2.5) state=idle | policeCar=(7.7,-7.1) | anyDown=none
+t=18s car=(21.7,2.6) h=1.57 spd=11.8 | ped0=(30.0,2.5) state=idle | policeCar=(5.7,-7.0) | anyDown=none
+t=20s car=(24.8,2.6) h=1.57 spd=12.7 | ped0=(30.6,2.5) state=flee | policeCar=(3.5,-6.9) | anyDown=none
+t=22s car=(28.1,2.6) h=1.57 spd=13.4 | ped0=(31.7,2.5) state=flee | policeCar=(1.3,-6.8) | anyDown=none
+t=24s car=(31.6,2.6) h=1.57 spd=14.1 | ped0=(34.9,1.7) state=flee | policeCar=(-0.9,-6.7) | anyDown=none
+t=26s car=(35.2,2.6) h=1.57 spd=10.2 | ped0=(35.9,1.0) state=down | policeCar=(-3.1,-6.6) | anyDown=0
+crimes: ["pedHit"]

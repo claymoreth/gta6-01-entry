@@ -1,0 +1,31 @@
+PASS  server up — http://127.0.0.1:8914/
+PASS  game playing
+PASS  vehicles present — 12 total, 3 drivable (sedan,sports,truck), 7 traffic, 2 police
+PASS  sedan spawn — (28.0, -11.5)
+PASS  truck spawn — (108.0, 30.0)
+PASS  traffic moves — max displacement 3.3 m
+PASS  walk still works (regression) — moved 1.9 m
+PASS  enter prompt near car — {"hidden":false,"text":"Press E to enter — Ember Sedan"}
+PASS  enter vehicle (E) — {"name":"Ember Sedan","type":"sedan","x":28,"z":-11.5,"heading":-1.5707963267948966,"speed":0,"damage":0}
+PASS  accelerate — 20 km/h
+PASS  speedometer HUD live — speed-num = 21
+PASS  steering (D = right) — heading -0.36 rad
+PASS  brake (S while moving) — from 11 to 1 km/h
+PASS  reverse (S from stop) — -1.4 m/s
+PASS  exit vehicle (E) — on foot
+PASS  handbrake (Space) — reached 28 km/h, handbrake to 0 km/h (from 29)
+PASS  vehicle collision + damage — damage 16%
+PASS  speedometer still live after crash — speed-num = 6
+PASS  traffic separation (no overlap) — min pairwise distance 27.09 m
+PASS  all cars inside world bounds
+PASS  exit vehicle, player beside car — driving=false, speedoHidden=true, nearest car 2.6 m
+PASS  district detection (regression) — WATERFRONT — South Warehouse · Pier Road
+SESSION A perf: FPS 6.3 (wall-clock, 640x360 lowfx) · draw calls 265 · triangles 5926
+PASS  no console errors / failed requests — clean
+SHOT drive state: {"driving":true,"car":{"name":"Ember Sedan","type":"sedan","x":34.715434093558684,"z":2.5,"heading":1.5707963267948966,"speed":9.279729835762167,"damage":0},"speedKmh":33.4070274087438,"fps":1.1321181931393647,"drawCalls":977,"triangles":21070,"speedo":"33","speedoHidden":false}
+PASS  shot=drive: driving with live speedometer — driving=true, speedo=33 km/h
+PASS  screenshot 04-vehicle-driving.jpg saved — 77 KiB
+SESSION B perf: FPS 1.1 (wall-clock, 1280x720 full quality) · draw calls 977 · triangles 21070
+PASS  no console errors / failed requests (visuals) — clean
+
+==== PHASE 3: 26/26 PASS ====

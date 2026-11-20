@@ -603,7 +603,7 @@ function steerToward(car, tx, tz) {
   let dh = desired - car.heading;
   while (dh > Math.PI) dh -= Math.PI * 2;
   while (dh < -Math.PI) dh += Math.PI * 2;
-  return clamp(dh * 1.6, -1, 1);
+  return clamp(-dh * 1.6, -1, 1);
 }
 export function createNpcs(scene, world, vehicles, audio, hud) {
   const colliders = world.colliders;
@@ -733,13 +733,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       if (gameTime - last < DAMAGE_CRIME_COOLDOWN) return { witnessed: false, byPolice: false, duplicate: true };
       damageCrimeAt.set(opts.target, gameTime);
     }
-    const heatAmount =
-      type === 'theft' ? WANTED_HEAT.theft
-      : type === 'pedHit' ? WANTED_HEAT.pedHit
-      : type === 'policeDamage' ? WANTED_HEAT.policeDamage
-      : type === 'assault' ? WANTED_HEAT.assault
-      : type === 'weaponFire' ? WANTED_HEAT.weaponFire
-      : WANTED_HEAT.damage;
+    const heatAmount = WANTED_HEAT[type] || WANTED_HEAT.damage;
     let policeWitness = false;
     let pedWitness = false;
     for (const u of units) {
@@ -775,6 +769,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       triggerDanger(x, z, 25);
       return { witnessed: true, byPolice: false, duplicate: false };
     }
+    notify('No one saw that — no wanted level');
     return { witnessed: false, byPolice: false, duplicate: false };
   }
   function buildCarSearchPoints(u, lkp) {
@@ -866,9 +861,9 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       }
       const steer = steerToward(car, tx, tz);
       control = {
-        throttle: level >= 4 ? 1.0 : 0.85,
+        throttle: d < 6 ? 0 : (level >= 4 ? 1.0 : 0.85),
         steer,
-        handbrake: false,
+        handbrake: d < 6,
         boost: level >= 4,
       };
       control = applyStuckRecovery(u, car, control, dt);
@@ -957,7 +952,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       if (p.state === 'down') continue;
       for (const v of ctx.vehicles) {
         const d = Math.hypot(v.pos.x - p.pos.x, v.pos.z - p.pos.z);
-        if (d < 1.6 && Math.abs(v.speed) > 3) {
+        if (d < 2.0 && Math.abs(v.speed) > 3) {
           p.knockDown(v.pos.x, v.pos.z);
           triggerDanger(p.pos.x, p.pos.z, 25);
           if (v === ctx.drivenCar) {

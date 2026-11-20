@@ -1,0 +1,3 @@
+t=0 player (0.00, 0.00)
+DIAG ERR TypeError: cars is not iterable
+    at /home/hatch/workspace/makefun/gta6-01-entry/validation/diag-push2.cjs:32:21

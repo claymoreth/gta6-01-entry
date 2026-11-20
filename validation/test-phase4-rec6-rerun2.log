@@ -1,0 +1,42 @@
+PASS  server up — http://127.0.0.1:8917/
+PASS  game loads + playing — state=playing
+SESSION A perf: FPS 5.7 (wall-clock, 480x270 lowfx) — game time runs ~0.28x wall clock
+PASS  NPC population (14 peds, 3 foot police, 2 police cars) — {"peds":14,"footPolice":3,"policeCars":2}
+PASS  pedestrians spawn inside world bounds — bounds x -170..170, z -70..70
+PASS  pedestrians do not spawn overlapping — closest pair 11.02 m
+PASS  no pedestrian spawns inside a building — all on sidewalks/roads
+PASS  all police units start on patrol — foot:patrol foot:patrol foot:patrol car:patrol car:patrol
+PASS  wanted starts at 0 — {"level":0,"heat":0,"status":"","lastKnown":{"x":0,"z":14},"lastSeenTime":2.5942999999996266}
+PASS  pedestrians walk (most move in 10 game-s) — 14/14 moved > 0.5 m
+PASS  no walking pedestrian is stuck — all walkers advancing
+PASS  pedestrians flee a danger event — ped 0 state walk -> flee, moved 4.0 m
+PASS  police do NOT detect a crime through a wall — police at (20,-5), LOS=false, nearPed=true, witnessed=false, level=0
+PASS  one crime event raises wanted only once (dedup) — first witnessed=true heat=15, second duplicate=true heat=15
+PASS  real theft (E into a traffic car) raises wanted when witnessed — driving=true, car=traffic, theft logged=true witnessed=true, level 0 -> 1
+FAIL  real pedestrian hit (driven car) is a witnessed crime — ped down=false, pedHit logged=false witnessed=-, level=0 heat=0
+PASS  crime triggers patrol -> investigate -> pursue — start all-patrol=true, active after crime=true, pursuing unit=#0 foot
+PASS  pursuer closes distance and follows the player's new position — gap 8.0 -> 4.4 m while standing; after teleport responder #1 (investigate) gap to NEW pos 62.5 m vs OLD pos 127.0 m
+PASS  police never teleport (no large position jumps) — max 2 s step 1.9 m (unit 1 investigate->investigate)
+PASS  all 5 wanted levels reachable by repeated witnessed crimes — levels after each crime: 1 -> 2 -> 3 -> 3 -> 4 -> 5, heat=90
+PASS  each wanted level activates a different number of units — active units: L1=1 (want 1), L3=3 (want 3), L5=5 (want 5)
+PASS  HUD wanted stars + status match level 3 — stars="WANTED ★★★☆☆" (filled 3, empty 2), status="PURSUIT"
+PASS  wanted does not decay while police still see the player — heat 30 -> 30 over 3 game-s while a unit sees the player=true
+PASS  breaking line of sight ends pursuit (search begins) — any unit still sees player=false, searching unit=#3 car, any unit still pursuing=false
+PASS  search investigates the last known position, not the hidden player — LKP 80 m from player; #1 foot (investigate) LKP gap 42.7 -> 29.9 m, player gap 104.2 m
+PASS  hiding in a safehouse lowers wanted pressure — heat 26.400000000000034 -> 16.800000000000125 over 3 game-s in the safehouse (zone rate 3.0/s), any unit sees player=false
+PASS  pursuit resumes when the player is seen again — unit #1 foot pursuing again
+PASS  wanted decays to 0 and police return to patrol — wanted cleared (heat 0), all police back on patrol=true
+SESSION A perf: draw calls 1446 · triangles 27834 (480x270 lowfx)
+PASS  no console errors / failed requests (logic) — clean
+PASS  screenshot p4-01-pedestrians.jpg — 77 KiB
+PASS  screenshot p4-02-flee.jpg — 78 KiB
+PASS  screenshot p4-03-patrol.jpg — 100 KiB
+PASS  screenshot p4-04-pursuit.jpg — 85 KiB
+PASS  screenshot p4-05-wanted5.jpg — 85 KiB
+PASS  screenshot p4-06-search.jpg — 67 KiB
+PASS  screenshot p4-07-escape.jpg — 64 KiB
+SHOT end state: {"level":4,"heat":69.67499999999923,"status":"SEARCH","lastKnown":{"x":20,"z":-30},"lastSeenTime":1.6320000000000008}
+PASS  no console errors / failed requests (visuals) — clean
+
+PHASE 4: 35/36 checks passed
+  FAILED: real pedestrian hit (driven car) is a witnessed crime — ped down=false, pedHit logged=false witnessed=-, level=0 heat=0

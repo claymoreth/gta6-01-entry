@@ -1,0 +1,33 @@
+enterCar returned: true, driving=true
+drivenCar: {"name":"Ember Sedan","type":"sedan","x":8.676865677635849,"z":2.5721621319084385,"heading":1.5707963267948966,"speed":0,"damage":0}
+t=2s car=(8.8,2.6) h=1.57 spd=1.5 | ped0=(30.0,2.5) state=idle | policeCar=(14.1,-6.2) | anyDown=none
+t=4s car=(9.5,2.6) h=1.57 spd=3.7 | ped0=(30.0,2.5) state=idle | policeCar=(13.5,-6.3) | anyDown=none
+t=6s car=(10.7,2.6) h=1.57 spd=5.6 | ped0=(30.0,2.5) state=idle | policeCar=(12.6,-6.6) | anyDown=none
+t=8s car=(12.4,2.6) h=1.57 spd=7.2 | ped0=(30.0,2.5) state=idle | policeCar=(11.3,-6.9) | anyDown=none
+t=10s car=(14.4,2.6) h=1.57 spd=8.7 | ped0=(30.0,2.5) state=idle | policeCar=(9.8,-7.0) | anyDown=none
+t=12s car=(16.8,2.6) h=1.57 spd=9.9 | ped0=(30.0,2.5) state=idle | policeCar=(8.0,-7.1) | anyDown=none
+t=14s car=(19.4,2.6) h=1.57 spd=11.0 | ped0=(30.0,2.5) state=idle | policeCar=(6.0,-7.0) | anyDown=none
+t=16s car=(22.3,2.6) h=1.57 spd=12.0 | ped0=(30.0,2.5) state=flee | policeCar=(3.9,-7.0) | anyDown=none
+t=18s car=(25.5,2.6) h=1.57 spd=12.8 | ped0=(30.8,2.5) state=flee | policeCar=(1.6,-6.8) | anyDown=none
+t=20s car=(28.8,2.6) h=1.57 spd=13.5 | ped0=(32.4,2.4) state=flee | policeCar=(-0.6,-6.7) | anyDown=none
+t=22s car=(32.3,2.6) h=1.57 spd=14.2 | ped0=(35.4,1.4) state=flee | policeCar=(-2.8,-6.6) | anyDown=none
+t=24s car=(36.6,2.6) h=1.57 spd=14.8 | ped0=(36.4,0.9) state=flee | policeCar=(-5.5,-6.4) | anyDown=none
+t=26s car=(41.2,2.6) h=1.57 spd=15.4 | ped0=(37.4,0.8) state=flee | policeCar=(-8.2,-6.3) | anyDown=none
+t=28s car=(45.9,2.6) h=1.57 spd=15.8 | ped0=(38.3,0.7) state=flee | policeCar=(-10.8,-6.1) | anyDown=none
+t=30s car=(50.7,2.6) h=1.57 spd=16.2 | ped0=(39.3,0.6) state=flee | policeCar=(-13.5,-6.0) | anyDown=none
+t=32s car=(55.6,2.6) h=1.57 spd=16.5 | ped0=(40.2,0.5) state=flee | policeCar=(-16.2,-5.8) | anyDown=none
+t=34s car=(60.6,2.6) h=1.57 spd=16.8 | ped0=(41.2,0.4) state=flee | policeCar=(-18.8,-5.7) | anyDown=none
+t=36s car=(65.7,2.6) h=1.57 spd=17.1 | ped0=(42.1,0.3) state=flee | policeCar=(-21.5,-5.5) | anyDown=none
+t=38s car=(70.9,2.6) h=1.57 spd=17.3 | ped0=(43.1,0.1) state=flee | policeCar=(-24.2,-5.4) | anyDown=none
+t=40s car=(76.1,2.6) h=1.57 spd=17.4 | ped0=(44.0,0.0) state=flee | policeCar=(-26.9,-5.2) | anyDown=none
+t=42s car=(81.3,2.6) h=1.57 spd=17.6 | ped0=(45.0,-0.1) state=flee | policeCar=(-29.5,-5.0) | anyDown=none
+t=44s car=(86.6,2.6) h=1.57 spd=17.7 | ped0=(45.9,-0.2) state=walk | policeCar=(-32.2,-4.9) | anyDown=none
+t=46s car=(91.1,2.6) h=1.57 spd=17.8 | ped0=(45.7,-0.2) state=walk | policeCar=(-34.4,-4.8) | anyDown=none
+t=48s car=(96.4,2.6) h=1.57 spd=17.9 | ped0=(45.4,-0.2) state=walk | policeCar=(-37.1,-4.6) | anyDown=none
+t=50s car=(101.8,2.6) h=1.57 spd=17.9 | ped0=(45.1,-0.3) state=walk | policeCar=(-39.8,-4.5) | anyDown=none
+t=52s car=(106.3,2.6) h=1.57 spd=18.0 | ped0=(44.8,-0.3) state=walk | policeCar=(-42.0,-4.3) | anyDown=none
+t=54s car=(110.8,2.6) h=1.57 spd=18.0 | ped0=(44.5,-0.3) state=walk | policeCar=(-44.2,-4.2) | anyDown=none
+t=56s car=(115.3,2.6) h=1.57 spd=18.1 | ped0=(44.4,-0.3) state=walk | policeCar=(-46.4,-4.1) | anyDown=none
+t=58s car=(119.8,2.6) h=1.57 spd=18.1 | ped0=(44.1,-0.3) state=walk | policeCar=(-48.7,-3.9) | anyDown=none
+t=60s car=(124.4,2.6) h=1.57 spd=18.2 | ped0=(43.8,-0.3) state=walk | policeCar=(-50.9,-3.8) | anyDown=none
+crimes: []

@@ -48,6 +48,8 @@ function getSmokeTexture() {
 function buildCarMesh(type, color) {
   const t = TYPES[type];
   const group = new THREE.Group();
+  const shell = new THREE.Group();
+  shell.rotation.y = -Math.PI / 2;
   const bodyMat = new THREE.MeshLambertMaterial({ color });
   const darkMat = new THREE.MeshLambertMaterial({ color: 0x1a1a20 });
   const glassMat = new THREE.MeshLambertMaterial({ color: 0x16283a });
@@ -60,19 +62,19 @@ function buildCarMesh(type, color) {
     const chassis = new THREE.Mesh(new THREE.BoxGeometry(t.len, 0.5, t.wid), darkMat);
     chassis.position.y = 0.55;
     chassis.castShadow = true;
-    group.add(chassis);
+    shell.add(chassis);
     const cab = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.7, t.wid - 0.15), bodyMat);
     cab.position.set(halfL - 1.1, 1.35, 0);
     cab.castShadow = true;
-    group.add(cab);
+    shell.add(cab);
     const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, t.wid - 0.5), glassMat);
     windshield.position.set(halfL - 0.15, 1.55, 0);
-    group.add(windshield);
+    shell.add(windshield);
     const bedWall = new THREE.MeshLambertMaterial({ color });
     const bedFloor = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.18, t.wid - 0.1), bedWall);
     bedFloor.position.set(-halfL + 1.9, 0.9, 0);
     bedFloor.castShadow = true;
-    group.add(bedFloor);
+    shell.add(bedFloor);
     for (const [bx, bz, bw, bd] of [
       [-halfL + 0.15, 0, 0.18, t.wid - 0.1],
       [-halfL + 1.9, halfW - 0.1, 3.6, 0.18],
@@ -81,49 +83,49 @@ function buildCarMesh(type, color) {
       const wall = new THREE.Mesh(new THREE.BoxGeometry(bw, 0.9, bd), bedWall);
       wall.position.set(bx, 1.35, bz);
       wall.castShadow = true;
-      group.add(wall);
+      shell.add(wall);
     }
     const crate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 1.1), new THREE.MeshLambertMaterial({ color: 0x6b4a2f }));
     crate.position.set(-halfL + 1.6, 1.5, 0);
     crate.castShadow = true;
-    group.add(crate);
+    shell.add(crate);
   } else {
     const body = new THREE.Mesh(new THREE.BoxGeometry(t.len, 0.55, t.wid), bodyMat);
     body.position.y = 0.55;
     body.castShadow = true;
-    group.add(body);
+    shell.add(body);
     const cabin = new THREE.Mesh(new THREE.BoxGeometry(t.len * 0.52, 0.5, t.wid * 0.82), glassMat);
     cabin.position.set(-t.len * 0.04, 1.05, 0);
     cabin.castShadow = true;
-    group.add(cabin);
+    shell.add(cabin);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(t.len * 0.46, 0.08, t.wid * 0.78), bodyMat);
     roof.position.set(-t.len * 0.04, 1.32, 0);
     roof.castShadow = true;
-    group.add(roof);
+    shell.add(roof);
     const hood = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, t.wid * 0.9), bodyMat);
     hood.position.set(halfL - 0.55, 0.86, 0);
-    group.add(hood);
+    shell.add(hood);
     const bumperF = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, t.wid + 0.06), darkMat);
     bumperF.position.set(halfL - 0.05, 0.42, 0);
-    group.add(bumperF);
+    shell.add(bumperF);
     const bumperR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, t.wid + 0.06), darkMat);
     bumperR.position.set(-halfL + 0.05, 0.42, 0);
-    group.add(bumperR);
+    shell.add(bumperR);
   }
   const headMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
   const tailMat = new THREE.MeshBasicMaterial({ color: 0xff2a2a });
   for (const s of [-1, 1]) {
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.42), headMat);
     head.position.set(halfL + 0.02, 0.72, s * (halfW - 0.45));
-    group.add(head);
+    shell.add(head);
     const tail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.14, 0.5), tailMat);
     tail.position.set(-halfL - 0.02, 0.72, s * (halfW - 0.45));
-    group.add(tail);
+    shell.add(tail);
   }
   for (const s of [-1, 1]) {
     const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.08), darkMat);
     mirror.position.set(halfL * 0.45, 1.0, s * (halfW + 0.02));
-    group.add(mirror);
+    shell.add(mirror);
   }
   let lightBar = null;
   if (type === 'police') {
@@ -131,19 +133,19 @@ function buildCarMesh(type, color) {
     for (const s of [-1, 1]) {
       const door = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 0.06), whiteMat);
       door.position.set(-0.1, 0.62, s * (halfW + 0.01));
-      group.add(door);
+      shell.add(door);
     }
     const redMat = new THREE.MeshBasicMaterial({ color: 0x551111 });
     const blueMat = new THREE.MeshBasicMaterial({ color: 0x111155 });
     const barBase = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 1.1), darkMat);
     barBase.position.set(-0.1, 1.42, 0);
-    group.add(barBase);
+    shell.add(barBase);
     const red = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.45), redMat);
     red.position.set(-0.1, 1.52, 0.28);
-    group.add(red);
+    shell.add(red);
     const blue = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.45), blueMat);
     blue.position.set(-0.1, 1.52, -0.28);
-    group.add(blue);
+    shell.add(blue);
     lightBar = { redMat, blueMat };
   }
   const wheels = {};
@@ -165,16 +167,17 @@ function buildCarMesh(type, color) {
     group.add(steerG);
     return { steerG, spinG };
   }
-  const fl = makeWheel(axleF, wheelZ, true);
-  const fr = makeWheel(axleF, -wheelZ, true);
-  const rl = makeWheel(axleR, wheelZ, false);
-  const rr = makeWheel(axleR, -wheelZ, false);
+  const fl = makeWheel(wheelZ, axleF, true);
+  const fr = makeWheel(-wheelZ, axleF, true);
+  const rl = makeWheel(wheelZ, axleR, false);
+  const rr = makeWheel(-wheelZ, axleR, false);
   wheels.steerL = fl.steerG;
   wheels.steerR = fr.steerG;
   wheels.spinFL = fl.spinG;
   wheels.spinFR = fr.spinG;
   wheels.spinRL = rl.spinG;
   wheels.spinRR = rr.spinG;
+  group.add(shell);
   return { group, wheels, lightBar };
 }
 function resolveCar(pos, heading, type, speed, colliders) {
@@ -262,7 +265,8 @@ class Vehicle {
   update(dt, control, colliders) {
     if (this.holdTimer > 0) {
       this.holdTimer -= dt;
-      control = { throttle: -1, steer: 0, handbrake: false, boost: false };
+      this.speed = 0;
+      control = { throttle: 0, steer: 0, handbrake: false, boost: false };
     }
     const t = this.type;
     const speedRatio = clamp(Math.abs(this.speed) / t.topSpeed, 0, 1);
@@ -355,14 +359,14 @@ class Vehicle {
     const dx = wp.x - this.pos.x;
     const dz = wp.z - this.pos.z;
     const dist = Math.hypot(dx, dz);
-    if (dist < 5) {
+    if (dist < 8) {
       this.wpIndex = (this.wpIndex + 1) % this.route.length;
     }
     const desired = Math.atan2(dx, dz);
     let dh = desired - this.heading;
     while (dh > Math.PI) dh -= Math.PI * 2;
     while (dh < -Math.PI) dh += Math.PI * 2;
-    let steer = clamp(dh * 1.6, -1, 1);
+    let steer = clamp(-dh * 1.6, -1, 1);
     if (this.recoverTimer > 0) {
       this.recoverTimer -= dt;
       return { throttle: -0.5, steer: -steer, handbrake: false, boost: false };
@@ -415,6 +419,7 @@ class Vehicle {
       }
     }
     const throttle = blocked ? -1 : this.speed < this.targetSpeed ? 0.65 : 0;
+    if (blocked && this.speed < 0) steer = -steer;
     return { throttle, steer, handbrake: false, boost: false };
   }
 }
@@ -553,8 +558,8 @@ export function createVehicles(scene, world) {
     if (headlight.parent) headlight.parent.remove(headlight);
     if (headlightTarget.parent) headlightTarget.parent.remove(headlightTarget);
     if (v) {
-      headlight.position.set(v.type.len / 2 - 0.2, 1.0, 0);
-      headlightTarget.position.set(v.type.len / 2 + 14, 0, 0);
+      headlight.position.set(0, 1.0, v.type.len / 2 - 0.2);
+      headlightTarget.position.set(0, 0, v.type.len / 2 + 14);
       v.group.add(headlight);
       v.group.add(headlightTarget);
       headlight.intensity = 80;

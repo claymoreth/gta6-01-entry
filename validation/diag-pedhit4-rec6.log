@@ -1,0 +1,7 @@
+fresh spawn playerPos: {"x":0,"y":0,"z":14}
+sedan before placeCar: {"name":"Ember Sedan","type":"sedan","drivable":true,"traffic":false,"police":false,"x":28,"z":-11.5,"heading":-1.5707963267948966,"speed":0,"damage":0}
+sedan right after placeCar: {"name":"Ember Sedan","type":"sedan","drivable":true,"traffic":false,"police":false,"x":8.614017866456905,"z":2.5608428494138553,"heading":1.5707963267948966,"speed":0,"damage":0}
+playerPos after placeCar: {"x":0,"y":0,"z":14}
+sedan 1s after enterCar: {"name":"Ember Sedan","type":"sedan","drivable":true,"traffic":false,"police":false,"x":8.614017866456905,"z":2.5608428494138553,"heading":1.5707963267948966,"speed":0,"damage":0}
+playerPos after enterCar: {"x":8.614017866456905,"y":0,"z":2.5608428494138553}
+drivenCar: {"name":"Ember Sedan","type":"sedan","x":8.614017866456905,"z":2.5608428494138553,"heading":1.5707963267948966,"speed":0,"damage":0}
