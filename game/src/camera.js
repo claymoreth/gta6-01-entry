@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import { segmentClearT, clamp } from './collision.js';
 const DIST = 6.0;
 const HEIGHT_OFFSET = 1.7;
-const PITCH_MIN = -0.12;
-const PITCH_MAX = 0.55;
-const SENS = 0.0032;
+const PITCH_MIN = -.12;
+const PITCH_MAX = .55;
+const SENS = .0032;
 export function createCamera(camera, colliders) {
   const state = {
     yaw: 0,
-    pitch: 0.22,
+    pitch: .22,
     distance: DIST,
     dist: DIST,
     height: HEIGHT_OFFSET,
@@ -21,7 +21,7 @@ export function createCamera(camera, colliders) {
   };
   state.reset = function reset() {
     state.yaw = 0;
-    state.pitch = 0.22;
+    state.pitch = .22;
     state.distance = DIST;
     state.dist = DIST;
     state.height = HEIGHT_OFFSET;
@@ -47,16 +47,16 @@ export function createCamera(camera, colliders) {
       state.target.y + oy * state.dist,
       state.target.z + oz * state.dist,
     );
-    if (state.desired.y < 0.5) state.desired.y = 0.5;
+    if (state.desired.y < .5) state.desired.y = .5;
     const t = segmentClearT(
       state.target.x, state.target.y, state.target.z,
       state.desired.x, state.desired.y, state.desired.z,
       colliders,
     );
-    const useDist = state.dist * Math.max(0.25, t);
+    const useDist = state.dist * Math.max(.25, t);
     camera.position.set(
       state.target.x + ox * useDist,
-      Math.max(0.5, state.target.y + oy * useDist),
+      Math.max(.5, state.target.y + oy * useDist),
       state.target.z + oz * useDist,
     );
     camera.lookAt(state.target);

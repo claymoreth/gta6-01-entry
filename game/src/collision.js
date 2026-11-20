@@ -41,8 +41,8 @@ export function segmentClearT(x0, y0, z0, x1, y1, z1, colliders) {
     const y = y0 + (y1 - y0) * t;
     const z = z0 + (z1 - z0) * t;
     for (const c of colliders) {
-      if (x > c.minX - 0.25 && x < c.maxX + 0.25 &&
-          z > c.minZ - 0.25 && z < c.maxZ + 0.25 &&
+      if (x > c.minX - .25 && x < c.maxX + .25 &&
+          z > c.minZ - .25 && z < c.maxZ + .25 &&
           y > c.minY && y < c.maxY) {
         return Math.max(0, (i - 1) / STEPS);
       }

@@ -59,13 +59,13 @@ const POLICE_PATROLS = [
   [{ x: 107.5, z: -50 }, { x: 107.5, z: 50 }],
 ];
 const GEO = {
-  torso: new THREE.BoxGeometry(0.46, 0.58, 0.26),
-  head: new THREE.BoxGeometry(0.28, 0.3, 0.28),
-  hair: new THREE.BoxGeometry(0.3, 0.09, 0.3),
-  arm: new THREE.BoxGeometry(0.13, 0.55, 0.15).translate(0, -0.275, 0),
-  leg: new THREE.BoxGeometry(0.17, 0.72, 0.19).translate(0, -0.36, 0),
-  cap: new THREE.BoxGeometry(0.32, 0.07, 0.32),
-  badge: new THREE.BoxGeometry(0.1, 0.12, 0.03),
+  torso: new THREE.BoxGeometry(.46, .58, .26),
+  head: new THREE.BoxGeometry(.28, .3, .28),
+  hair: new THREE.BoxGeometry(.3, .09, .3),
+  arm: new THREE.BoxGeometry(.13, .55, .15).translate(0, -.275, 0),
+  leg: new THREE.BoxGeometry(.17, .72, .19).translate(0, -.36, 0),
+  cap: new THREE.BoxGeometry(.32, .07, .32),
+  badge: new THREE.BoxGeometry(.1, .12, .03),
 };
 const SHIRT_COLORS = [0x3a6db3, 0xd23a2f, 0x3a7a4a, 0xb38a2f, 0x7a4a8a, 0xd8d8d8];
 const PANTS_COLORS = [0x2c3e63, 0x3a3a3a, 0x6b4a2f];
@@ -123,7 +123,7 @@ class HumanoidRenderer {
   }
   setPose(i, pos, heading, swing, height, lying, policeIndex) {
     const base = this._base;
-    base.makeTranslation(pos.x, lying ? 0.25 : 0, pos.z);
+    base.makeTranslation(pos.x, lying ? .25 : 0, pos.z);
     this._part.makeRotationY(heading);
     base.multiply(this._part);
     if (lying) {
@@ -135,13 +135,13 @@ class HumanoidRenderer {
     this._place(this.torso, i, 0, 1.12, 0, 0);
     this._place(this.head, i, 0, 1.62, 0, 0);
     this._place(this.hair, i, 0, 1.8, 0, 0);
-    this._place(this.arm, i * 2, -0.31, 1.38, 0, -swing * 0.8);
-    this._place(this.arm, i * 2 + 1, 0.31, 1.38, 0, swing * 0.8);
-    this._place(this.leg, i * 2, -0.13, 0.82, 0, swing);
-    this._place(this.leg, i * 2 + 1, 0.13, 0.82, 0, -swing);
+    this._place(this.arm, i * 2, -.31, 1.38, 0, -swing * .8);
+    this._place(this.arm, i * 2 + 1, .31, 1.38, 0, swing * .8);
+    this._place(this.leg, i * 2, -.13, .82, 0, swing);
+    this._place(this.leg, i * 2 + 1, .13, .82, 0, -swing);
     if (policeIndex >= 0) {
       this._place(this.cap, policeIndex, 0, 1.86, 0, 0);
-      this._place(this.badge, policeIndex, 0.12, 1.28, 0.15, 0);
+      this._place(this.badge, policeIndex, .12, 1.28, .15, 0);
     }
     for (const m of [this.torso, this.head, this.hair, this.arm, this.leg, this.cap, this.badge]) {
       m.instanceMatrix.needsUpdate = true;
@@ -161,8 +161,8 @@ function resolvePedFromCars(x, z, vehicles) {
       const dx = px - ax;
       const dz = pz - az;
       const d = Math.hypot(dx, dz);
-      const minD = 0.4 + 1.15;
-      if (d < minD && d > 0.001) {
+      const minD = .4 + 1.15;
+      if (d < minD && d > .001) {
         px = ax + (dx / d) * minD;
         pz = az + (dz / d) * minD;
       }
@@ -175,7 +175,7 @@ class Pedestrian {
     this.renderer = renderer;
     this.index = index;
     const vi = index;
-    this.height = 0.92 + ((vi * 37) % 16) / 100;
+    this.height = .92 + ((vi * 37) % 16) / 100;
     renderer.setColors(
       index,
       SHIRT_COLORS[vi % SHIRT_COLORS.length],
@@ -184,7 +184,7 @@ class Pedestrian {
       HAIR_COLORS[Math.floor(vi / 2) % HAIR_COLORS.length],
     );
     this.route = route;
-    this.speed = 1.0 + ((vi * 13) % 6) / 10;
+    this.speed = 1 + ((vi * 13) % 6) / 10;
     this.state = 'walk';
     this.wpIndex = 0;
     this.dir = 1;
@@ -192,7 +192,7 @@ class Pedestrian {
     this.pos = new THREE.Vector3(start.x, 0, start.z);
     this.heading = Math.atan2(route.points[1].x - start.x, route.points[1].z - start.z);
     this.walkPhase = vi * 1.7;
-    this.swingAmp = 0.6;
+    this.swingAmp = .6;
     this.lying = false;
     this.idleTimer = 0;
     this.fleeTimer = 0;
@@ -216,7 +216,7 @@ class Pedestrian {
     this.state = 'walk';
     this.wpIndex = 0;
     this.dir = 1;
-    this.swingAmp = 0.6;
+    this.swingAmp = .6;
     this.lying = false;
     this.idleTimer = 0;
     this.fleeTimer = 0;
@@ -263,12 +263,12 @@ class Pedestrian {
       const dx = v.pos.x - this.pos.x;
       const dz = v.pos.z - this.pos.z;
       const d = Math.hypot(dx, dz);
-      if (d > 4 || d < 0.01) continue;
-      if (Math.abs(v.speed) < 0.5) continue;
+      if (d > 4 || d < .01) continue;
+      if (Math.abs(v.speed) < .5) continue;
       const fx = Math.sin(v.heading);
       const fz = Math.cos(v.heading);
       const dot = ((dx * fx + dz * fz) / d) * Math.sign(v.speed);
-      if (dot > 0.6) return true;
+      if (dot > .6) return true;
     }
     return false;
   }
@@ -276,14 +276,14 @@ class Pedestrian {
     const dx = tx - this.pos.x;
     const dz = tz - this.pos.z;
     const dist = Math.hypot(dx, dz);
-    if (dist < 0.05) return 0;
+    if (dist < .05) return 0;
     const vx = (dx / dist) * speed;
     const vz = (dz / dist) * speed;
     let nx = this.pos.x + vx * dt;
     let nz = this.pos.z + vz * dt;
     nx = clamp(nx, WORLD_BOUNDS.minX + 1, WORLD_BOUNDS.maxX - 1);
     nz = clamp(nz, WORLD_BOUNDS.minZ + 1, WORLD_BOUNDS.maxZ - 1);
-    const solved = resolveCircle(nx, nz, 0.4, 0, 1.8, ctx.colliders);
+    const solved = resolveCircle(nx, nz, .4, 0, 1.8, ctx.colliders);
     const pushed = resolvePedFromCars(solved.x, solved.z, ctx.vehicles);
     const moved = Math.hypot(pushed.x - this.pos.x, pushed.z - this.pos.z);
     this.pos.x = pushed.x;
@@ -294,7 +294,7 @@ class Pedestrian {
     while (d < -Math.PI) d += Math.PI * 2;
     this.heading += d * Math.min(1, 10 * dt);
     const running = speed > 2;
-    this.swingAmp = running ? 0.85 : 0.6;
+    this.swingAmp = running ? .85 : .6;
     this.walkPhase += speed * dt * 2.2 * (running ? 1.4 : 1);
     this.syncPose();
     return moved;
@@ -359,9 +359,9 @@ class Pedestrian {
     const dx = wp.x - this.pos.x;
     const dz = wp.z - this.pos.z;
     const dist = Math.hypot(dx, dz);
-    if (dist < 1.0) {
+    if (dist < 1) {
       this.advanceWaypoint();
-      if (Math.random() < 0.25) {
+      if (Math.random() < .25) {
         this.state = 'idle';
         this.idleTimer = 1 + Math.random() * 2;
       }
@@ -372,7 +372,7 @@ class Pedestrian {
       return;
     }
     const moved = this.moveToward(wp.x, wp.z, this.speed, edt, ctx);
-    if (moved < 0.02) {
+    if (moved < .02) {
       this.stuckTimer += edt;
       if (this.stuckTimer > 3) {
         this.stuckTimer = 0;
@@ -391,7 +391,7 @@ class FootPolice {
     this.renderer = renderer;
     this.index = index;
     this.policeIndex = policeIndex;
-    this.height = 1.0;
+    this.height = 1;
     renderer.setColors(
       index,
       POLICE_SHIRT,
@@ -405,7 +405,7 @@ class FootPolice {
     this.pos = new THREE.Vector3(start.x, 0, start.z);
     this.heading = Math.atan2(patrol.points[1].x - start.x, patrol.points[1].z - start.z);
     this.walkPhase = index * 2.1;
-    this.swingAmp = 0.6;
+    this.swingAmp = .6;
     this.state = 'patrol';
     this.target = { x: start.x, z: start.z };
     this.searchPoints = [];
@@ -413,7 +413,7 @@ class FootPolice {
     this.scanTimer = 0;
     this.seesPlayer = false;
     this.loseTimer = 0;
-    this.losTimer = index * 0.15;
+    this.losTimer = index * .15;
     this.holdTimer = 0;
     this.stuckTimer = 0;
     this.stuckX = start.x;
@@ -441,7 +441,7 @@ class FootPolice {
     this.heading = Math.atan2(this.patrol.points[1].x - start.x, this.patrol.points[1].z - start.z);
     this.state = 'patrol';
     this.dir = 1;
-    this.swingAmp = 0.6;
+    this.swingAmp = .6;
     this.searchPoints = [];
     this.searchIndex = 0;
     this.scanTimer = 0;
@@ -462,14 +462,14 @@ class FootPolice {
     const dx = tx - this.pos.x;
     const dz = tz - this.pos.z;
     const dist = Math.hypot(dx, dz);
-    if (dist < 0.05) return 0;
+    if (dist < .05) return 0;
     const vx = (dx / dist) * speed;
     const vz = (dz / dist) * speed;
     let nx = this.pos.x + vx * dt;
     let nz = this.pos.z + vz * dt;
     nx = clamp(nx, WORLD_BOUNDS.minX + 1, WORLD_BOUNDS.maxX - 1);
     nz = clamp(nz, WORLD_BOUNDS.minZ + 1, WORLD_BOUNDS.maxZ - 1);
-    const solved = resolveCircle(nx, nz, 0.45, 0, 1.8, ctx.colliders);
+    const solved = resolveCircle(nx, nz, .45, 0, 1.8, ctx.colliders);
     const pushed = resolvePedFromCars(solved.x, solved.z, ctx.vehicles);
     const moved = Math.hypot(pushed.x - this.pos.x, pushed.z - this.pos.z);
     this.pos.x = pushed.x;
@@ -480,7 +480,7 @@ class FootPolice {
     while (d < -Math.PI) d += Math.PI * 2;
     this.heading += d * Math.min(1, 10 * dt);
     const running = speed > 2.5;
-    this.swingAmp = running ? 0.85 : 0.6;
+    this.swingAmp = running ? .85 : .6;
     this.walkPhase += speed * dt * 2.2 * (running ? 1.4 : 1);
     this.syncPose();
     return moved;
@@ -506,7 +506,7 @@ class FootPolice {
       const wp = this.patrolTarget();
       tx = wp.x;
       tz = wp.z;
-      if (Math.hypot(tx - this.pos.x, tz - this.pos.z) < 1.0) this.dir = -this.dir;
+      if (Math.hypot(tx - this.pos.x, tz - this.pos.z) < 1) this.dir = -this.dir;
     } else if (this.state === 'pursue') {
       tx = ctx.playerPos.x;
       tz = ctx.playerPos.z;
@@ -551,12 +551,12 @@ class FootPolice {
     }
     const moved = this.moveToward(mx, mz, speed, dt, ctx);
     if (this.state !== 'patrol') {
-      if (moved < 0.02) {
+      if (moved < .02) {
         this.stuckTimer += dt;
         if (this.stuckTimer > 3 && this.sidestepTimer <= 0) {
           this.stuckTimer = 0;
           this.sidestepTimer = 1.5;
-          this.sidestepDir = Math.random() < 0.5 ? 1 : -1;
+          this.sidestepDir = Math.random() < .5 ? 1 : -1;
         }
       } else {
         this.stuckTimer = 0;
@@ -644,7 +644,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     scanTimer: 0,
     seesPlayer: false,
     loseTimer: 0,
-    losTimer: i * 0.25,
+    losTimer: i * .25,
     holdTimer: 0,
     stuckTimer: 0,
     recoverTimer: 0,
@@ -788,14 +788,14 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
   function applyStuckRecovery(u, car, control, dt) {
     if (u.recoverTimer > 0) {
       u.recoverTimer -= dt;
-      return { throttle: -0.5, steer: -control.steer, handbrake: false, boost: false };
+      return { throttle: -.5, steer: -control.steer, handbrake: false, boost: false };
     }
-    if (Math.abs(car.speed) < 0.5 && control.throttle > 0) {
+    if (Math.abs(car.speed) < .5 && control.throttle > 0) {
       u.stuckTimer += dt;
       if (u.stuckTimer > 4) {
         u.stuckTimer = 0;
         u.recoverTimer = 1.2;
-        return { throttle: -0.5, steer: -control.steer, handbrake: false, boost: false };
+        return { throttle: -.5, steer: -control.steer, handbrake: false, boost: false };
       }
     } else {
       u.stuckTimer = 0;
@@ -816,7 +816,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     }
     u.flashTimer -= dt;
     if (u.flashTimer <= 0) {
-      u.flashTimer = 0.35;
+      u.flashTimer = .35;
       u.flashOn = !u.flashOn;
       bar.redMat.color.setHex(u.flashOn ? 0xff2a2a : 0x551111);
       bar.blueMat.color.setHex(u.flashOn ? 0x111155 : 0x2a6bff);
@@ -830,12 +830,12 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       updateLightBar(u, dt);
       return;
     }
-    if (car.damage >= 0.95) {
+    if (car.damage >= .95) {
       u.disabledTimer += dt;
       vehicles.updatePolice(car, dt, { throttle: 0, steer: 0, handbrake: true, boost: false });
       if (u.disabledTimer > 8) {
         u.disabledTimer = 0;
-        car.damage = 0.3;
+        car.damage = .3;
         u.state = 'patrol';
       }
       updateLightBar(u, dt);
@@ -850,20 +850,18 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       const d = Math.hypot(p.x - car.pos.x, p.z - car.pos.z);
       let tx = p.x;
       let tz = p.z;
-      if (d > 15) {
-        const snapped = snapToRoad(p.x, p.z);
-        tx = snapped.x;
-        tz = snapped.z;
-      } else if (level >= 4) {
+      const snapped = snapToRoad(p.x, p.z);
+      tx = snapped.x;
+      tz = snapped.z;
+      if (level >= 4 && d <= 15) {
         const lead = Math.min(1.5, d / 25);
-        tx = p.x + ctx.playerVel.x * lead;
-        tz = p.z + ctx.playerVel.z * lead;
+        const s=snapToRoad(p.x+ctx.playerVel.x*lead,p.z+ctx.playerVel.z*lead);tx=s.x;tz=s.z;
       }
       const steer = steerToward(car, tx, tz);
       control = {
-        throttle: d < 6 ? 0 : (level >= 4 ? 1.0 : 0.85),
+        throttle: d < 4 ? -0.6 : (d < 9 ? 0 : (level >= 4 ? 1 : .85)),
         steer,
-        handbrake: d < 6,
+        handbrake: d < 9 && d >= 4,
         boost: level >= 4,
       };
       control = applyStuckRecovery(u, car, control, dt);
@@ -895,11 +893,14 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
         }
       } else {
         const steer = steerToward(car, snapped.x, snapped.z);
-        control = { throttle: 0.7, steer, handbrake: false, boost: false };
+        control = { throttle: .7, steer, handbrake: false, boost: false };
         control = applyStuckRecovery(u, car, control, dt);
       }
     }
     const crash = vehicles.updatePolice(car, dt, control);
+    const q=snapToRoad(car.pos.x,car.pos.z);
+    if(q.z===0)car.pos.z=clamp(car.pos.z,-5,5);
+    else{const h=q.x===0?5:4;car.pos.x=clamp(car.pos.x,q.x-h,q.x+h);}
     if (crash > 0) audio.crash(crash);
     updateLightBar(u, dt);
   }
@@ -956,7 +957,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
           p.knockDown(v.pos.x, v.pos.z);
           triggerDanger(p.pos.x, p.pos.z, 25);
           if (v === ctx.drivenCar) {
-            v.speed *= 0.7;
+            v.speed *= .7;
             reportCrime('pedHit', p.pos.x, p.pos.z, {});
           }
           break;
@@ -971,7 +972,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
       }
     }
     anyLos = false;
-    const runSpeed = 5.5 + level * 0.5;
+    const runSpeed = 5.5 + level * .5;
     const footCtx = {
       colliders,
       vehicles: ctx.vehicles,
@@ -983,7 +984,7 @@ export function createNpcs(scene, world, vehicles, audio, hud) {
     for (const u of units) {
       u.losTimer -= dt;
       if (u.losTimer <= 0) {
-        u.losTimer = 0.5;
+        u.losTimer = .5;
         const range = u.kind === 'car' ? LOS_RANGE_CAR : LOS_RANGE_FOOT;
         const d = Math.hypot(u.pos.x - ctx.playerPos.x, u.pos.z - ctx.playerPos.z);
         u.seesPlayer = d <= range && losClear(u.pos.x, u.pos.z, ctx.playerPos.x, ctx.playerPos.z);

@@ -19,7 +19,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, .1, 500);
 const world = buildWorld(scene, { lowFx });
 const player = createPlayer(scene, world.colliders);
 const thirdPerson = createCamera(camera, world.colliders);
@@ -50,16 +50,16 @@ const combat = createCombat({ scene, world, player, npcs, vehicles, hud, audio, 
 function makeBeacon() {
   const g = new THREE.Group();
   const pillar = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.5, 30, 10, 1, true),
+    new THREE.CylinderGeometry(.5, .5, 30, 10, 1, true),
     new THREE.MeshBasicMaterial({
-      color: 0xffd166, transparent: true, opacity: 0.25,
+      color: 0xffd166, transparent: true, opacity: .25,
       side: THREE.DoubleSide, depthWrite: false,
     }),
   );
   pillar.position.y = 15;
   g.add(pillar);
   const diamond = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.9),
+    new THREE.OctahedronGeometry(.9),
     new THREE.MeshBasicMaterial({ color: 0xffd166 }),
   );
   diamond.position.y = 4.2;
@@ -67,10 +67,10 @@ function makeBeacon() {
   g.add(diamond);
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(1.6, 2.2, 24),
-    new THREE.MeshBasicMaterial({ color: 0xffd166, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }),
+    new THREE.MeshBasicMaterial({ color: 0xffd166, side: THREE.DoubleSide, transparent: true, opacity: .8 }),
   );
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.06;
+  ring.position.y = .06;
   g.add(ring);
   g.visible = false;
   scene.add(g);
@@ -237,12 +237,12 @@ function frame(now) {
   requestAnimationFrame(frame);
   frames += 1;
   const rawDt = (now - lastTime) / 1000;
-  const dt = Math.min(0.05, rawDt);
+  const dt = Math.min(.05, rawDt);
   lastTime = now;
   fpsAccum += 1 / Math.max(rawDt, 1e-4);
   fpsFrames += 1;
   fpsTimer += rawDt;
-  if (fpsTimer >= 0.5) {
+  if (fpsTimer >= .5) {
     fps = fpsAccum / Math.max(1, fpsFrames);
     fpsAccum = 0;
     fpsFrames = 0;
@@ -328,7 +328,7 @@ function frame(now) {
       const diamond = beacon.getObjectByName('beacon-diamond');
       if (diamond) {
         diamond.rotation.y += dt * 1.5;
-        diamond.position.y = 4.2 + Math.sin(now / 450) * 0.35;
+        diamond.position.y = 4.2 + Math.sin(now / 450) * .35;
       }
     }
     checkArrival();
@@ -339,7 +339,7 @@ function frame(now) {
     }
     hud.update(dt, fps, player, waypointInfo(), driveHudInfo(), npcs.wantedInfo(), npcs.minimapInfo(), combat.info());
   } else if (state === 'menu') {
-    thirdPerson.yaw += dt * 0.05;
+    thirdPerson.yaw += dt * .05;
     thirdPerson.update(dt, player.pos);
   }
   renderer.render(scene, camera);

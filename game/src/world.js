@@ -26,13 +26,13 @@ function facadeTexture(rand, litRatio, cols, rows) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const lit = rand() < litRatio;
-      const x = c * cw + cw * 0.22;
-      const y = r * ch + ch * 0.22;
-      const ww = cw * 0.56;
-      const hh = ch * 0.56;
+      const x = c * cw + cw * .22;
+      const y = r * ch + ch * .22;
+      const ww = cw * .56;
+      const hh = ch * .56;
       if (lit) {
         const warm = rand();
-        g.fillStyle = warm < 0.6 ? '#ffd166' : warm < 0.85 ? '#ff9f43' : '#cfe8ff';
+        g.fillStyle = warm < .6 ? '#ffd166' : warm < .85 ? '#ff9f43' : '#cfe8ff';
         g.fillRect(x, y, ww, hh);
       } else {
         g.fillStyle = '#0a0d18';
@@ -60,14 +60,14 @@ function houseTexture(rand, litRatio) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const lit = rand() < litRatio;
-      const x = c * cw + cw * 0.25;
-      const y = r * ch + ch * 0.25;
+      const x = c * cw + cw * .25;
+      const y = r * ch + ch * .25;
       if (lit) {
-        g.fillStyle = rand() < 0.75 ? '#ffc978' : '#ffe9b8';
-        g.fillRect(x, y, cw * 0.5, ch * 0.5);
+        g.fillStyle = rand() < .75 ? '#ffc978' : '#ffe9b8';
+        g.fillRect(x, y, cw * .5, ch * .5);
       } else {
         g.fillStyle = '#120e0a';
-        g.fillRect(x, y, cw * 0.5, ch * 0.5);
+        g.fillRect(x, y, cw * .5, ch * .5);
       }
     }
   }
@@ -91,7 +91,7 @@ function warehouseTexture(rand, base, rib) {
     g.fillRect(x + 5, 0, 2, h);
   }
   for (let i = 0; i < 6; i++) {
-    if (rand() < 0.7) {
+    if (rand() < .7) {
       g.fillStyle = '#ffb347';
       g.fillRect(8 + i * 20, 14, 10, 8);
     }
@@ -135,7 +135,7 @@ function seaTexture() {
     const x = Math.random() * w;
     const y = Math.random() * h;
     const len = 12 + Math.random() * 30;
-    g.strokeStyle = `rgba(120,180,230,${0.05 + Math.random() * 0.12})`;
+    g.strokeStyle = `rgba(120,180,230,${.05 + Math.random() * .12})`;
     g.lineWidth = 1 + Math.random() * 1.5;
     g.beginPath();
     g.moveTo(x, y);
@@ -153,28 +153,28 @@ function buildPalm(rand) {
   const palm = new THREE.Group();
   const height = 5 + rand() * 2.5;
   const trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, height, 7), trunkMat);
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.12, .22, height, 7), trunkMat);
   trunk.position.y = height / 2;
-  trunk.rotation.z = (rand() - 0.5) * 0.12;
+  trunk.rotation.z = (rand() - .5) * .12;
   trunk.castShadow = true;
   palm.add(trunk);
   const leafMat = new THREE.MeshLambertMaterial({ color: 0x1e6b34, side: THREE.DoubleSide });
   const crownY = height;
   const fronds = 7 + Math.floor(rand() * 3);
   for (let i = 0; i < fronds; i++) {
-    const angle = (i / fronds) * Math.PI * 2 + rand() * 0.4;
-    const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 2.4), leafMat);
-    leaf.position.set(Math.cos(angle) * 0.9, crownY - 0.15, Math.sin(angle) * 0.9);
+    const angle = (i / fronds) * Math.PI * 2 + rand() * .4;
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(.55, .04, 2.4), leafMat);
+    leaf.position.set(Math.cos(angle) * .9, crownY - .15, Math.sin(angle) * .9);
     leaf.rotation.y = -angle + Math.PI / 2;
-    leaf.rotation.x = 0.55 + rand() * 0.25;
-    leaf.translateZ(0.4);
+    leaf.rotation.x = .55 + rand() * .25;
+    leaf.translateZ(.4);
     leaf.castShadow = true;
     palm.add(leaf);
   }
   const nutMat = new THREE.MeshLambertMaterial({ color: 0x7a5a2e });
   for (let i = 0; i < 3; i++) {
-    const nut = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 5), nutMat);
-    nut.position.set((rand() - 0.5) * 0.5, crownY - 0.35, (rand() - 0.5) * 0.5);
+    const nut = new THREE.Mesh(new THREE.SphereGeometry(.14, 6, 5), nutMat);
+    nut.position.set((rand() - .5) * .5, crownY - .35, (rand() - .5) * .5);
     palm.add(nut);
   }
   return palm;
@@ -183,16 +183,16 @@ function buildTree(rand) {
   const tree = new THREE.Group();
   const height = 2.2 + rand() * 1.2;
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.14, 0.2, height, 7),
+    new THREE.CylinderGeometry(.14, .2, height, 7),
     new THREE.MeshLambertMaterial({ color: 0x4a3220 }),
   );
   trunk.position.y = height / 2;
   trunk.castShadow = true;
   tree.add(trunk);
   const canopyMat = new THREE.MeshLambertMaterial({ color: 0x2a7a3e });
-  const canopy = new THREE.Mesh(new THREE.SphereGeometry(1.4 + rand() * 0.6, 8, 6), canopyMat);
-  canopy.position.y = height + 0.9;
-  canopy.scale.y = 0.85;
+  const canopy = new THREE.Mesh(new THREE.SphereGeometry(1.4 + rand() * .6, 8, 6), canopyMat);
+  canopy.position.y = height + .9;
+  canopy.scale.y = .85;
   canopy.castShadow = true;
   tree.add(canopy);
   return tree;
@@ -204,12 +204,12 @@ export function buildWorld(scene, opts) {
   const lamps = [];
   const pois = [];
   scene.background = new THREE.Color(0x0a0a1e);
-  scene.fog = new THREE.FogExp2(0x0d0d26, 0.0075);
-  const hemi = new THREE.HemisphereLight(0x4a4a8a, 0x0c0a14, 1.3);
+  scene.fog = new THREE.FogExp2(0x0d0d26, .0075);
+  const hemi = new THREE.HemisphereLight(0x4a4a8a, 0x0c0a14, 1.5);
   scene.add(hemi);
-  const ambient = new THREE.AmbientLight(0x2a2a55, 1.2);
+  const ambient = new THREE.AmbientLight(0x2a2a55, 1.4);
   scene.add(ambient);
-  const moon = new THREE.DirectionalLight(0x9db4ff, 1.4);
+  const moon = new THREE.DirectionalLight(0x9db4ff, 1.6);
   moon.position.set(-40, 60, -25);
   moon.castShadow = !lowFx;
   moon.shadow.mapSize.set(2048, 2048);
@@ -218,7 +218,7 @@ export function buildWorld(scene, opts) {
   moon.shadow.camera.top = 90;
   moon.shadow.camera.bottom = -90;
   moon.shadow.camera.far = 220;
-  moon.shadow.bias = -0.0005;
+  moon.shadow.bias = -.0005;
   scene.add(moon);
   {
     const starGeo = new THREE.BufferGeometry();
@@ -226,7 +226,7 @@ export function buildWorld(scene, opts) {
     const pos = new Float32Array(N * 3);
     for (let i = 0; i < N; i++) {
       const a = rand() * Math.PI * 2;
-      const e = 0.12 + rand() * 1.35;
+      const e = .12 + rand() * 1.35;
       const r = 280;
       pos[i * 3] = Math.cos(a) * Math.cos(e) * r;
       pos[i * 3 + 1] = Math.sin(e) * r;
@@ -248,32 +248,32 @@ export function buildWorld(scene, opts) {
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
-  const roadMat = new THREE.MeshLambertMaterial({ color: 0x232330 });
+  const roadMat = new THREE.MeshLambertMaterial({ color: 0x282836 });
   const roadWideMat = new THREE.MeshLambertMaterial({ color: 0x262633 });
   const roadEW = new THREE.Mesh(new THREE.PlaneGeometry(344, 10), roadMat);
   roadEW.rotation.x = -Math.PI / 2;
-  roadEW.position.y = 0.02;
+  roadEW.position.y = .02;
   roadEW.receiveShadow = true;
   scene.add(roadEW);
   const roadNS0 = new THREE.Mesh(new THREE.PlaneGeometry(10, 144), roadMat);
   roadNS0.rotation.x = -Math.PI / 2;
-  roadNS0.position.y = 0.02;
+  roadNS0.position.y = .02;
   roadNS0.receiveShadow = true;
   scene.add(roadNS0);
   const roadNSW = new THREE.Mesh(new THREE.PlaneGeometry(8, 124), roadMat);
   roadNSW.rotation.x = -Math.PI / 2;
-  roadNSW.position.set(-115, 0.02, 0);
+  roadNSW.position.set(-115, .02, 0);
   roadNSW.receiveShadow = true;
   scene.add(roadNSW);
   const roadNSE = new THREE.Mesh(new THREE.PlaneGeometry(12, 124), roadWideMat);
   roadNSE.rotation.x = -Math.PI / 2;
-  roadNSE.position.set(115, 0.02, 0);
+  roadNSE.position.set(115, .02, 0);
   roadNSE.receiveShadow = true;
   scene.add(roadNSE);
   const walkMat = new THREE.MeshLambertMaterial({ color: 0x3b3b4c });
   function sidewalk(w, d, x, z) {
-    const s = new THREE.Mesh(new THREE.BoxGeometry(w, 0.18, d), walkMat);
-    s.position.set(x, 0.09, z);
+    const s = new THREE.Mesh(new THREE.BoxGeometry(w, .18, d), walkMat);
+    s.position.set(x, .09, z);
     s.receiveShadow = true;
     scene.add(s);
   }
@@ -289,35 +289,35 @@ export function buildWorld(scene, opts) {
   const stripeMat = new THREE.MeshBasicMaterial({ color: 0xdfe3ee });
   for (let x = -168; x <= 168; x += 6) {
     if (Math.abs(x) < 9 || Math.abs(x + 115) < 8 || Math.abs(x - 115) < 9) continue;
-    const d1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.02, 0.18), dashMat);
-    d1.position.set(x, 0.05, 0);
+    const d1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, .02, .18), dashMat);
+    d1.position.set(x, .05, 0);
     scene.add(d1);
   }
   for (let z = -66; z <= 66; z += 6) {
     if (Math.abs(z) < 9) continue;
-    const d2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 2.4), dashMat);
-    d2.position.set(0, 0.05, z);
+    const d2 = new THREE.Mesh(new THREE.BoxGeometry(.18, .02, 2.4), dashMat);
+    d2.position.set(0, .05, z);
     scene.add(d2);
-    const d3 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 2.4), dashMat);
-    d3.position.set(-115, 0.05, z);
+    const d3 = new THREE.Mesh(new THREE.BoxGeometry(.18, .02, 2.4), dashMat);
+    d3.position.set(-115, .05, z);
     scene.add(d3);
-    const d4 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 2.4), dashMat);
-    d4.position.set(115, 0.05, z);
+    const d4 = new THREE.Mesh(new THREE.BoxGeometry(.18, .02, 2.4), dashMat);
+    d4.position.set(115, .05, z);
     scene.add(d4);
   }
   function crosswalk(cx, cz) {
     for (let i = -4; i <= 4; i++) {
-      const s1 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.02, 9), stripeMat);
-      s1.position.set(cx + i * 1.2, 0.05, cz + 9.2);
+      const s1 = new THREE.Mesh(new THREE.BoxGeometry(.7, .02, 9), stripeMat);
+      s1.position.set(cx + i * 1.2, .05, cz + 9.2);
       scene.add(s1);
-      const s2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.02, 9), stripeMat);
-      s2.position.set(cx + i * 1.2, 0.05, cz - 9.2);
+      const s2 = new THREE.Mesh(new THREE.BoxGeometry(.7, .02, 9), stripeMat);
+      s2.position.set(cx + i * 1.2, .05, cz - 9.2);
       scene.add(s2);
-      const s3 = new THREE.Mesh(new THREE.BoxGeometry(9, 0.02, 0.7), stripeMat);
-      s3.position.set(cx + 9.2, 0.05, cz + i * 1.2);
+      const s3 = new THREE.Mesh(new THREE.BoxGeometry(9, .02, .7), stripeMat);
+      s3.position.set(cx + 9.2, .05, cz + i * 1.2);
       scene.add(s3);
-      const s4 = new THREE.Mesh(new THREE.BoxGeometry(9, 0.02, 0.7), stripeMat);
-      s4.position.set(cx - 9.2, 0.05, cz + i * 1.2);
+      const s4 = new THREE.Mesh(new THREE.BoxGeometry(9, .02, .7), stripeMat);
+      s4.position.set(cx - 9.2, .05, cz + i * 1.2);
       scene.add(s4);
     }
   }
@@ -331,38 +331,38 @@ export function buildWorld(scene, opts) {
     [-20, 20, 12, 14, 24], [-42, 22, 14, 12, 14], [-22, 44, 16, 12, 34], [-44, 46, 12, 12, 18],
   ];
   const facades = [
-    facadeTexture(mulberry32(11), 0.55, 8, 18),
-    facadeTexture(mulberry32(22), 0.4, 7, 14),
-    facadeTexture(mulberry32(33), 0.65, 9, 20),
-    facadeTexture(mulberry32(44), 0.3, 6, 12),
+    facadeTexture(mulberry32(11), .55, 8, 18),
+    facadeTexture(mulberry32(22), .4, 7, 14),
+    facadeTexture(mulberry32(33), .65, 9, 20),
+    facadeTexture(mulberry32(44), .3, 6, 12),
   ];
   const roofMat = new THREE.MeshLambertMaterial({ color: 0x12121e });
   const acMat = new THREE.MeshLambertMaterial({ color: 0x2a2a3a });
   for (const [x, z, w, d, h] of specs) {
     const tex = facades[Math.floor(rand() * facades.length)];
     const mat = new THREE.MeshLambertMaterial({
-      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.85,
+      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .85,
     });
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     b.position.set(x, h / 2, z);
     b.castShadow = true;
     b.receiveShadow = true;
     scene.add(b);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.4, 0.5, d + 0.4), roofMat);
-    roof.position.set(x, h + 0.25, z);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(w + .4, .5, d + .4), roofMat);
+    roof.position.set(x, h + .25, z);
     scene.add(roof);
     const nAc = 1 + Math.floor(rand() * 2);
     for (let i = 0; i < nAc; i++) {
-      const ac = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 1.2), acMat);
-      ac.position.set(x + (rand() - 0.5) * (w - 3), h + 0.9, z + (rand() - 0.5) * (d - 3));
+      const ac = new THREE.Mesh(new THREE.BoxGeometry(1.6, .9, 1.2), acMat);
+      ac.position.set(x + (rand() - .5) * (w - 3), h + .9, z + (rand() - .5) * (d - 3));
       scene.add(ac);
     }
     if (h >= 30) {
       const strip = new THREE.Mesh(
-        new THREE.BoxGeometry(w + 0.2, 0.3, d + 0.2),
+        new THREE.BoxGeometry(w + .2, .3, d + .2),
         new THREE.MeshBasicMaterial({ color: 0xff5d8f }),
       );
-      strip.position.set(x, h - 0.4, z);
+      strip.position.set(x, h - .4, z);
       scene.add(strip);
     }
     colliders.push(makeCollider(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 0, h, 'building'));
@@ -372,14 +372,14 @@ export function buildWorld(scene, opts) {
   const dumpMat = new THREE.MeshLambertMaterial({ color: 0x1e4d2a });
   function dumpster(x, z, ry) {
     const d = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.3, 1.1), dumpMat);
-    d.position.set(x, 0.65, z);
+    d.position.set(x, .65, z);
     d.rotation.y = ry;
     d.castShadow = true;
     scene.add(d);
-    colliders.push(makeCollider(x - 1.1, z - 0.6, x + 1.1, z + 0.6, 0, 1.3, 'dumpster'));
+    colliders.push(makeCollider(x - 1.1, z - .6, x + 1.1, z + .6, 0, 1.3, 'dumpster'));
   }
-  dumpster(30, -26, 0.3);
-  dumpster(-30, 30, -0.2);
+  dumpster(30, -26, .3);
+  dumpster(-30, 30, -.2);
   pois.push({ name: 'Narrow Alley', x: 30, z: -26, kind: 'alley', color: '#8a8fa8' });
   const palmSpots = [];
   for (let x = -52; x <= 52; x += 13) {
@@ -392,16 +392,16 @@ export function buildWorld(scene, opts) {
   }
   for (const [x, z] of palmSpots) {
     const palm = buildPalm(rand);
-    palm.position.set(x + (rand() - 0.5), 0, z + (rand() - 0.5));
+    palm.position.set(x + (rand() - .5), 0, z + (rand() - .5));
     palm.rotation.y = rand() * Math.PI * 2;
     scene.add(palm);
-    colliders.push(makeCollider(x - 0.35, z - 0.35, x + 0.35, z + 0.35, 0, 6, 'palm'));
+    colliders.push(makeCollider(x - .35, z - .35, x + .35, z + .35, 0, 6, 'palm'));
   }
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x22222e });
   const lampMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
   const poolGeo = new THREE.CircleGeometry(3.4, 16);
-  const poolMat = new THREE.MeshBasicMaterial({ color: 0xffc978, transparent: true, opacity: 0.13, depthWrite: false });
-  const lightSpots = [[-9, -9], [9, -9], [-9, 9], [9, 9], [-9, 0], [9, 0]];
+  const poolMat = new THREE.MeshBasicMaterial({ color: 0xffc978, transparent: true, opacity: .13, depthWrite: false });
+  const lightSpots = [[-9, -9], [9, -9], [-9, 9], [9, 9], [-9, 0], [9, 0], [60,9]];
   const lampSpots = [];
   for (let x = -50; x <= 50; x += 12.5) {
     if (Math.abs(x) < 10) continue;
@@ -413,19 +413,19 @@ export function buildWorld(scene, opts) {
   }
   function lampPost(x, z, real) {
     const g = new THREE.Group();
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 6.4, 8), poleMat);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.09, .13, 6.4, 8), poleMat);
     pole.position.y = 3.2;
     pole.castShadow = true;
     g.add(pole);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.1), poleMat);
-    arm.position.set(0.7, 6.3, 0);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6, .1, .1), poleMat);
+    arm.position.set(.7, 6.3, 0);
     g.add(arm);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.14, 0.3), lampMat);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(.7, .14, .3), lampMat);
     head.position.set(1.4, 6.22, 0);
     g.add(head);
     const pool = new THREE.Mesh(poolGeo, poolMat);
     pool.rotation.x = -Math.PI / 2;
-    pool.position.set(1.4, 0.05, 0);
+    pool.position.set(1.4, .05, 0);
     g.add(pool);
     g.position.set(x, 0, z);
     g.rotation.y = Math.atan2(-x, -z);
@@ -436,24 +436,24 @@ export function buildWorld(scene, opts) {
       scene.add(p);
       lamps.push(p);
     }
-    colliders.push(makeCollider(x - 0.2, z - 0.2, x + 0.2, z + 0.2, 0, 6.4, 'lamp'));
+    colliders.push(makeCollider(x - .2, z - .2, x + .2, z + .2, 0, 6.4, 'lamp'));
   }
   for (const [x, z] of lightSpots) lampPost(x, z, true);
   for (const [x, z] of lampSpots) lampPost(x, z, false);
-  const houseTex = houseTexture(mulberry32(77), 0.7);
-  const houseTex2 = houseTexture(mulberry32(78), 0.55);
+  const houseTex = houseTexture(mulberry32(77), .7);
+  const houseTex2 = houseTexture(mulberry32(78), .55);
   const roofRed = new THREE.MeshLambertMaterial({ color: 0x7a2e22 });
   const roofBrown = new THREE.MeshLambertMaterial({ color: 0x4a3220 });
   function house(x, z, w, d, h, tex, roof) {
     const mat = new THREE.MeshLambertMaterial({
-      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.7,
+      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .7,
     });
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     b.position.set(x, h / 2, z);
     b.castShadow = true;
     b.receiveShadow = true;
     scene.add(b);
-    const r = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, 2.2, 4), roof);
+    const r = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * .72, 2.2, 4), roof);
     r.position.set(x, h + 1.1, z);
     r.rotation.y = Math.PI / 4;
     r.castShadow = true;
@@ -468,21 +468,21 @@ export function buildWorld(scene, opts) {
       const w = 7 + rand() * 2;
       const d = 7 + rand() * 2;
       const h = 6 + rand() * 3;
-      house(hx, hz, w, d, h, rand() < 0.5 ? houseTex : houseTex2, rand() < 0.5 ? roofRed : roofBrown);
+      house(hx, hz, w, d, h, rand() < .5 ? houseTex : houseTex2, rand() < .5 ? roofRed : roofBrown);
     }
   }
   function apartment(x, z, w, d, h) {
     const tex = facades[Math.floor(rand() * facades.length)];
     const mat = new THREE.MeshLambertMaterial({
-      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.6,
+      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .6,
     });
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     b.position.set(x, h / 2, z);
     b.castShadow = true;
     b.receiveShadow = true;
     scene.add(b);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.4, 0.5, d + 0.4), roofMat);
-    roof.position.set(x, h + 0.25, z);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(w + .4, .5, d + .4), roofMat);
+    roof.position.set(x, h + .25, z);
     scene.add(roof);
     colliders.push(makeCollider(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 0, h, 'building'));
   }
@@ -494,23 +494,23 @@ export function buildWorld(scene, opts) {
       new THREE.MeshLambertMaterial({ color: 0x1d4d28 }),
     );
     lawn.rotation.x = -Math.PI / 2;
-    lawn.position.set(-140, 0.03, 37);
+    lawn.position.set(-140, .03, 37);
     lawn.receiveShadow = true;
     scene.add(lawn);
     const benchMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
     for (const [bx, bz, ry] of [[-150, 26, 0], [-130, 48, Math.PI], [-146, 44, Math.PI / 2]]) {
-      const bench = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.7), benchMat);
-      bench.position.set(bx, 0.25, bz);
+      const bench = new THREE.Mesh(new THREE.BoxGeometry(2.2, .5, .7), benchMat);
+      bench.position.set(bx, .25, bz);
       bench.rotation.y = ry;
       bench.castShadow = true;
       scene.add(bench);
-      colliders.push(makeCollider(bx - 1.1, bz - 0.4, bx + 1.1, bz + 0.4, 0, 0.6, 'bench'));
+      colliders.push(makeCollider(bx - 1.1, bz - .4, bx + 1.1, bz + .4, 0, .6, 'bench'));
     }
     const basin = new THREE.Mesh(
-      new THREE.CylinderGeometry(2.2, 2.4, 0.7, 12),
+      new THREE.CylinderGeometry(2.2, 2.4, .7, 12),
       new THREE.MeshLambertMaterial({ color: 0x5a5a6a }),
     );
-    basin.position.set(-140, 0.35, 37);
+    basin.position.set(-140, .35, 37);
     basin.castShadow = true;
     scene.add(basin);
     const water = new THREE.Mesh(
@@ -518,16 +518,16 @@ export function buildWorld(scene, opts) {
       new THREE.MeshBasicMaterial({ color: 0x4aa8ff }),
     );
     water.rotation.x = -Math.PI / 2;
-    water.position.set(-140, 0.72, 37);
+    water.position.set(-140, .72, 37);
     scene.add(water);
-    colliders.push(makeCollider(-142.4, 34.6, -137.6, 39.4, 0, 0.8, 'fountain'));
+    colliders.push(makeCollider(-142.4, 34.6, -137.6, 39.4, 0, .8, 'fountain'));
     const parkTrees = [[-148, 24], [-132, 26], [-150, 48], [-132, 50], [-146, 36], [-134, 42], [-162, -42], [-100, -52], [-100, 52], [-168, 20]];
     for (const [tx, tz] of parkTrees) {
       const tree = buildTree(rand);
       tree.position.set(tx, 0, tz);
       tree.rotation.y = rand() * Math.PI * 2;
       scene.add(tree);
-      colliders.push(makeCollider(tx - 0.3, tz - 0.3, tx + 0.3, tz + 0.3, 0, 4, 'tree'));
+      colliders.push(makeCollider(tx - .3, tz - .3, tx + .3, tz + .3, 0, 4, 'tree'));
     }
     pois.push({ name: 'Melati Park', x: -140, z: 37, kind: 'park', color: '#7ef0a8' });
   }
@@ -539,13 +539,13 @@ export function buildWorld(scene, opts) {
     hall.receiveShadow = true;
     scene.add(hall);
     const porch = new THREE.Mesh(
-      new THREE.BoxGeometry(6, 0.4, 3),
+      new THREE.BoxGeometry(6, .4, 3),
       new THREE.MeshLambertMaterial({ color: 0x3b3b4c }),
     );
-    porch.position.set(-115, 0.2, -50);
+    porch.position.set(-115, .2, -50);
     scene.add(porch);
     const sign = new THREE.Mesh(
-      new THREE.BoxGeometry(8, 1.2, 0.3),
+      new THREE.BoxGeometry(8, 1.2, .3),
       new THREE.MeshBasicMaterial({ color: 0xffd166 }),
     );
     sign.position.set(-115, 6.4, -50.8);
@@ -555,7 +555,7 @@ export function buildWorld(scene, opts) {
   }
   {
     const glow = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.9, 0.15),
+      new THREE.BoxGeometry(.5, .9, .15),
       new THREE.MeshBasicMaterial({ color: 0x37d67a }),
     );
     glow.position.set(-155, 1.4, -5.8);
@@ -576,7 +576,7 @@ export function buildWorld(scene, opts) {
   const whTex2 = warehouseTexture(mulberry32(92), '#33302e', '#4a4642');
   function warehouse(x, z, w, d, h, tex) {
     const mat = new THREE.MeshLambertMaterial({
-      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.55,
+      map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .55,
     });
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     b.position.set(x, h / 2, z);
@@ -584,10 +584,10 @@ export function buildWorld(scene, opts) {
     b.receiveShadow = true;
     scene.add(b);
     const strip = new THREE.Mesh(
-      new THREE.BoxGeometry(w + 0.2, 0.35, d + 0.2),
+      new THREE.BoxGeometry(w + .2, .35, d + .2),
       new THREE.MeshBasicMaterial({ color: 0xff7a2f }),
     );
-    strip.position.set(x, h - 0.3, z);
+    strip.position.set(x, h - .3, z);
     scene.add(strip);
     colliders.push(makeCollider(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 0, h, 'warehouse'));
   }
@@ -608,7 +608,7 @@ export function buildWorld(scene, opts) {
     for (let s = 0; s < stack; s++) {
       const c = new THREE.Mesh(new THREE.BoxGeometry(6, 2.6, 2.4), mat);
       c.position.set(cx, 1.3 + s * 2.6, cz);
-      c.rotation.y = (rand() - 0.5) * 0.06;
+      c.rotation.y = (rand() - .5) * .06;
       c.castShadow = true;
       c.receiveShadow = true;
       scene.add(c);
@@ -621,22 +621,22 @@ export function buildWorld(scene, opts) {
     const steel = new THREE.MeshLambertMaterial({ color: 0x8a6a2f });
     const dark = new THREE.MeshLambertMaterial({ color: 0x2a2a30 });
     for (const [lx, lz] of [[-4, -3], [4, -3], [-4, 3], [4, 3]]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.8, h, 0.8), steel);
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(.8, h, .8), steel);
       leg.position.set(lx, h / 2, lz);
       leg.castShadow = true;
       g.add(leg);
     }
     const beam = new THREE.Mesh(new THREE.BoxGeometry(11, 1.2, 1.2), steel);
-    beam.position.set(0, h + 0.6, 0);
+    beam.position.set(0, h + .6, 0);
     beam.castShadow = true;
     g.add(beam);
-    const jib = new THREE.Mesh(new THREE.BoxGeometry(14, 0.8, 0.8), dark);
+    const jib = new THREE.Mesh(new THREE.BoxGeometry(14, .8, .8), dark);
     jib.position.set(6, h + 1.8, 0);
     g.add(jib);
     const cab = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2, 2.2), dark);
     cab.position.set(0, h - 1.5, 0);
     g.add(cab);
-    const hook = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), dark);
+    const hook = new THREE.Mesh(new THREE.BoxGeometry(.8, 1.2, .8), dark);
     hook.position.set(10, h - 4, 0);
     g.add(hook);
     g.position.set(x, 0, z);
@@ -649,24 +649,24 @@ export function buildWorld(scene, opts) {
   pois.push({ name: 'Pier Crane', x: 128, z: -28, kind: 'landmark', color: '#ff7a2f' });
   {
     const pierMat = new THREE.MeshLambertMaterial({ map: plankTexture() });
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(32, 0.3, 8), pierMat);
-    pier.position.set(156, 0.15, 0);
+    const pier = new THREE.Mesh(new THREE.BoxGeometry(32, .3, 8), pierMat);
+    pier.position.set(156, .15, 0);
     pier.receiveShadow = true;
     scene.add(pier);
     const postMat = new THREE.MeshLambertMaterial({ color: 0x3a2a18 });
     for (let px = 142; px <= 170; px += 7) {
       for (const pz of [-3.4, 3.4]) {
-        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 1.2, 6), postMat);
-        post.position.set(px, -0.4, pz);
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, 1.2, 6), postMat);
+        post.position.set(px, -.4, pz);
         scene.add(post);
       }
     }
     const railMat = new THREE.MeshLambertMaterial({ color: 0x4a3220 });
     for (const pz of [-3.8, 3.8]) {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(32, 0.9, 0.15), railMat);
-      rail.position.set(156, 0.75, pz);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(32, .9, .15), railMat);
+      rail.position.set(156, .75, pz);
       scene.add(rail);
-      colliders.push(makeCollider(140, pz - 0.1, 172, pz + 0.1, 0, 1, 'rail'));
+      colliders.push(makeCollider(140, pz - .1, 172, pz + .1, 0, 1, 'rail'));
     }
     colliders.push(makeCollider(140, -4, 172, -3.8, 0, 1, 'rail'));
     colliders.push(makeCollider(171.8, -4, 172.2, 4, 0, 1, 'rail'));
@@ -697,7 +697,7 @@ export function buildWorld(scene, opts) {
     const cap = new THREE.Mesh(new THREE.ConeGeometry(1.8, 1.6, 8), red);
     cap.position.y = 19;
     tower.add(cap);
-    tower.position.set(168, 0.3, 0);
+    tower.position.set(168, .3, 0);
     scene.add(tower);
     beaconLight = new THREE.PointLight(0xffe9a8, 40, 60, 1.6);
     beaconLight.position.set(168, 17.3, 0);
@@ -707,17 +707,17 @@ export function buildWorld(scene, opts) {
   }
   let seaMat = null;
   {
-    seaMat = new THREE.MeshLambertMaterial({ map: seaTexture(), color: 0x9fc4e8, emissive: 0x0a2036, emissiveIntensity: 0.4 });
+    seaMat = new THREE.MeshLambertMaterial({ map: seaTexture(), color: 0x9fc4e8, emissive: 0x0a2036, emissiveIntensity: .4 });
     const sea = new THREE.Mesh(new THREE.PlaneGeometry(40, 164), seaMat);
     sea.rotation.x = -Math.PI / 2;
-    sea.position.set(176, 0.01, 0);
+    sea.position.set(176, .01, 0);
     scene.add(sea);
   }
   {
     const quayMat = new THREE.MeshLambertMaterial({ color: 0x3a3a44 });
     for (const [z0, z1] of [[-62, -4], [4, 62]]) {
       const wall = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, z1 - z0), quayMat);
-      wall.position.set(155, 0.55, (z0 + z1) / 2);
+      wall.position.set(155, .55, (z0 + z1) / 2);
       wall.castShadow = true;
       scene.add(wall);
       colliders.push(makeCollider(154.4, z0, 155.6, z1, 0, 1.1, 'quay'));
@@ -732,7 +732,7 @@ export function buildWorld(scene, opts) {
     office.castShadow = true;
     scene.add(office);
     const glow = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.9, 0.15),
+      new THREE.BoxGeometry(.5, .9, .15),
       new THREE.MeshBasicMaterial({ color: 0x37d67a }),
     );
     glow.position.set(132, 1.4, 42.4);
@@ -742,12 +742,12 @@ export function buildWorld(scene, opts) {
   }
   for (const [x, z] of [[115, 9], [148, -9]]) {
     const g = new THREE.Group();
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 7, 8), poleMat);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.09, .13, 7, 8), poleMat);
     pole.position.y = 3.5;
     pole.castShadow = true;
     g.add(pole);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.14, 0.3), new THREE.MeshBasicMaterial({ color: 0xffb347 }));
-    head.position.set(0.7, 6.9, 0);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(.7, .14, .3), new THREE.MeshBasicMaterial({ color: 0xffb347 }));
+    head.position.set(.7, 6.9, 0);
     g.add(head);
     g.position.set(x, 0, z);
     scene.add(g);
@@ -755,7 +755,7 @@ export function buildWorld(scene, opts) {
     p.position.set(x, 6.8, z);
     scene.add(p);
     lamps.push(p);
-    colliders.push(makeCollider(x - 0.2, z - 0.2, x + 0.2, z + 0.2, 0, 7, 'lamp'));
+    colliders.push(makeCollider(x - .2, z - .2, x + .2, z + .2, 0, 7, 'lamp'));
   }
   for (let z = -50; z <= 50; z += 12.5) {
     if (Math.abs(z) < 10) continue;
@@ -795,7 +795,7 @@ export function buildWorld(scene, opts) {
       lamps[i].intensity = (lamps[i].color.getHex() === 0x37d67a ? 18 : 60) + Math.sin(t * 7 + i * 2.4) * 2.5;
     }
     if (beaconLight) beaconLight.intensity = 40 + Math.sin(t * 1.6) * 22;
-    if (seaMat) seaMat.emissiveIntensity = 0.35 + Math.sin(t * 0.5) * 0.1;
+    if (seaMat) seaMat.emissiveIntensity = .35 + Math.sin(t * .5) * .1;
   }
   return { colliders, districtAt, update, pois, bounds: WORLD_BOUNDS };
 }

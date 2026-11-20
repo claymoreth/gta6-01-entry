@@ -39,7 +39,7 @@ export function createCombat(o) {
     if (wasted || reloading > 0 || fireCd > 0) return false;
     if (weapon === 0) return melee();
     if (mag <= 0) { audio.blip(); hud.showToast('Magazine empty — Press R to reload'); return false; }
-    fireCd = 0.28;
+    fireCd = .28;
     mag -= 1;
     const cp = Math.cos(cam.pitch);
     const d = { x: -Math.sin(cam.yaw) * cp, z: -Math.cos(cam.yaw) * cp };
@@ -50,11 +50,12 @@ export function createCombat(o) {
       if (p.state === 'down') continue;
       const rx = p.pos.x - ox, rz = p.pos.z - oz;
       const t = rx * d.x + rz * d.z;
-      if (t < 0.5 || t >= bestT) continue;
+      if (t < .5 || t >= bestT) continue;
       const cx = rx - d.x * t, cz = rz - d.z * t;
-      if (cx * cx + cz * cz < 0.81) { best = p; bestT = t; }
+      if (cx * cx + cz * cz < .81) { best = p; bestT = t; }
     }
     hud.flashCross('fire', 70);
+    player.showFlash();
     audio.shot();
     player.facing = Math.atan2(d.x, d.z);
     if (best) {
@@ -70,15 +71,15 @@ export function createCombat(o) {
   }
   function melee() {
     if (wasted || meleeCd > 0) return false;
-    meleeCd = 0.6;
+    meleeCd = .6;
     const fx = Math.sin(player.facing), fz = Math.cos(player.facing);
     let hitAny = false;
     for (const p of allPeds) {
       if (p.state === 'down') continue;
       const dx = p.pos.x - player.pos.x, dz = p.pos.z - player.pos.z;
       const d = Math.hypot(dx, dz);
-      if (d > 2.2 || d < 0.01) continue;
-      if ((dx * fx + dz * fz) / d < 0.5) continue;
+      if (d > 2.2 || d < .01) continue;
+      if ((dx * fx + dz * fz) / d < .5) continue;
       hitAny = true;
       const down = hurtPed(p, 1, player.pos.x, player.pos.z);
       npcs.reportCrime('assault', p.pos.x, p.pos.z, { target: `ped-${p.index}` });
@@ -97,6 +98,7 @@ export function createCombat(o) {
     if (wasted) return;
     weapon = i === -1 ? (weapon === 0 ? 1 : 0) : (i === 1 ? 1 : 0);
     reloading = 0;
+    player.setWeapon(weapon);
   }
   function hurtPlayer(amount) {
     if (wasted) return;
@@ -231,6 +233,7 @@ export function createCombat(o) {
     health = 100; armour = 50; money = 0; lastHurt = -100; hurtCd = 0;
     wasted = false; wastedT = 0; mi = 0; si = 0; timer = 0; hadHeat = false; allDone = false;
     hpMap = new WeakMap();
+    player.setWeapon(0);
     hud.setMission(missionText());
   }
   function info() {

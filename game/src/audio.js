@@ -30,7 +30,7 @@ export function createAudio() {
       engineGain = ctx.createGain();
       engineGain.gain.value = 0;
       const sub = ctx.createGain();
-      sub.gain.value = 0.5;
+      sub.gain.value = .5;
       engineOsc.connect(engineFilter);
       engineOsc2.connect(sub);
       sub.connect(engineFilter);
@@ -60,7 +60,7 @@ export function createAudio() {
       sirenOsc.frequency.value = 900;
       sirenLfo = ctx.createOscillator();
       sirenLfo.type = 'sine';
-      sirenLfo.frequency.value = 0.45;
+      sirenLfo.frequency.value = .45;
       const lfoGain = ctx.createGain();
       lfoGain.gain.value = 240;
       sirenLfo.connect(lfoGain);
@@ -78,19 +78,19 @@ export function createAudio() {
   function setEngine(ratio, on) {
     if (!ctx || !engineGain) return;
     const t = ctx.currentTime;
-    engineGain.gain.setTargetAtTime(on ? 0.04 + ratio * 0.035 : 0, t, 0.1);
-    engineOsc.frequency.setTargetAtTime(55 + ratio * 170, t, 0.08);
-    engineOsc2.frequency.setTargetAtTime(28 + ratio * 82, t, 0.08);
-    engineFilter.frequency.setTargetAtTime(420 + ratio * 950, t, 0.1);
+    engineGain.gain.setTargetAtTime(on ? .04 + ratio * .035 : 0, t, .1);
+    engineOsc.frequency.setTargetAtTime(55 + ratio * 170, t, .08);
+    engineOsc2.frequency.setTargetAtTime(28 + ratio * 82, t, .08);
+    engineFilter.frequency.setTargetAtTime(420 + ratio * 950, t, .1);
   }
   function setSkid(on) {
     if (!ctx || !skidGain) return;
-    skidGain.gain.setTargetAtTime(on ? 0.045 : 0, ctx.currentTime, 0.08);
+    skidGain.gain.setTargetAtTime(on ? .045 : 0, ctx.currentTime, .08);
   }
   function setSiren(on, level) {
     if (!ctx || !sirenGain) return;
-    const v = on ? 0.018 + Math.min(1, level || 0) * 0.014 : 0;
-    sirenGain.gain.setTargetAtTime(v, ctx.currentTime, 0.25);
+    const v = on ? .018 + Math.min(1, level || 0) * .014 : 0;
+    sirenGain.gain.setTargetAtTime(v, ctx.currentTime, .25);
   }
   function blip() {
     if (!ctx) return;
@@ -98,14 +98,14 @@ export function createAudio() {
       const o = ctx.createOscillator();
       o.type = 'square';
       const g = ctx.createGain();
-      g.gain.setValueAtTime(0.05, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+      g.gain.setValueAtTime(.05, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .28);
       o.connect(g);
       g.connect(ctx.destination);
       o.frequency.setValueAtTime(880, ctx.currentTime);
-      o.frequency.setValueAtTime(660, ctx.currentTime + 0.14);
+      o.frequency.setValueAtTime(660, ctx.currentTime + .14);
       o.start();
-      o.stop(ctx.currentTime + 0.3);
+      o.stop(ctx.currentTime + .3);
     } catch {  }
   }
   function crash(intensity) {
@@ -117,14 +117,14 @@ export function createAudio() {
       f.type = 'lowpass';
       f.frequency.value = 320;
       const g = ctx.createGain();
-      const v = Math.min(0.5, 0.08 + intensity * 0.025);
+      const v = Math.min(.5, .08 + intensity * .025);
       g.gain.setValueAtTime(v, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .35);
       src.connect(f);
       f.connect(g);
       g.connect(ctx.destination);
       src.start();
-      src.stop(ctx.currentTime + 0.4);
+      src.stop(ctx.currentTime + .4);
     } catch {  }
   }
   function sfx(d, v, f) {
@@ -137,14 +137,14 @@ export function createAudio() {
       fl.frequency.value = f;
       const g = ctx.createGain();
       g.gain.setValueAtTime(v, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d);
+      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + d);
       s.connect(fl);
       fl.connect(g);
       g.connect(ctx.destination);
       s.start();
-      s.stop(ctx.currentTime + d + 0.05);
+      s.stop(ctx.currentTime + d + .05);
     } catch {  }
   }
-  function shot() { sfx(0.12, 0.3, 1400); }
+  function shot() { sfx(.12, .3, 1400); }
   return { init, setEngine, setSkid, crash, setSiren, blip, shot };
 }
